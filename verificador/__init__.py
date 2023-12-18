@@ -1,4 +1,7 @@
-class Verificador:
+from verificador import *
+
+
+class VerificadorFormato:
     """Se encarga de ejecutar la pipeline de verificaciones."""
 
     resultado: dict
