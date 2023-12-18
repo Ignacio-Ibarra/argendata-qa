@@ -349,6 +349,8 @@ class GFolder(GResource):
         else:
             return next_.find(path.pop(), by='name')
 
+    # TODO: Cambiarlo de forma tal que reconozca bien las barras al principio y final del path.
+    #   ¿Quizá usando os.path? La ventaja que tiene es que es más robusto para que sea cross-plat.
     @__find_strategies.register('recursion')
     def find_by_recursion(self, path: str):
         _path = path.split('/')
