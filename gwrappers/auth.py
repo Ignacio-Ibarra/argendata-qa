@@ -1,6 +1,7 @@
 import os
 
 import pydrive, pydrive.auth, pydrive.drive
+import requests
 
 from logger import inject_logger
 from utils import staticproperty, Singleton
@@ -56,6 +57,11 @@ class GAuth(metaclass=Singleton):
         GAuth.log.info('Authenticated successfully.')
         return result
 
+    # noinspection PyMethodParameters
+    @staticproperty
+    def instance():
+        return GAuth.get_instance().gauth
+
 
 @inject_logger('google_drive')
 class GDrive(metaclass=Singleton):
@@ -92,3 +98,25 @@ class GDrive(metaclass=Singleton):
         :return: Monoinstancia de GDrive.
         """
         return GDrive.get_instance().gdrive
+
+    @staticmethod
+    def download_xlsx(id: str, outfile=None) -> str:
+        url = f"https://docs.google.com/spreadsheets/export?id={id}&exportFormat=xlsx"
+        r = requests.get(url, headers={"Authorization": "Bearer " + GAuth.instance.attr['credentials'].access_token})
+
+        if not outfile:
+            deduced_name = r.headers['Content-Disposition']
+            index = deduced_name.find('filename=')
+            deduced_name = deduced_name[index + 9:]
+            deduced_name = deduced_name.split(';')[0]
+            deduced_name = deduced_name.replace('"', '').replace("'", "")
+            index = deduced_name.rfind('.')
+            deduced_name, filename_extension = deduced_name[:index], deduced_name[index:]
+            outfile = f'./tmp/{deduced_name}{filename_extension}'
+
+        outfile = file(outfile)
+
+        with open(outfile, 'wb') as fp:
+            fp.write(r.content)
+
+        return outfile
