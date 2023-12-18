@@ -91,8 +91,11 @@ class GResource:
         return f'{self.clean_title}_{now.string}{self.extension}'
 
     def __init__(self, data: dict):
-        for field in GResource.__fields__:
-            setattr(self, field, data.get(field, None))
+        for field, metadata in data.items():
+            setattr(self, field, metadata)
+
+    def __getattr__(self, item, *args, **kwargs):
+        return getattr(self, item, *args, **kwargs)
 
     @staticmethod
     def get_if_exists(parent_id: str, title: str, mimeType: str) -> tuple[bool, None | GoogleDriveFile]:
