@@ -1,4 +1,5 @@
 import json
+from logging import Logger
 from typing import Literal
 
 from pydrive.files import GoogleDriveFile
@@ -16,6 +17,41 @@ class GResource:
     Es una interfaz entre un recurso local y un recurso en la nube.
     Da utilidades para el manejo de recursos.
     """
+    log: Logger
+    id: str
+    kind: str
+    userPermission: dict
+    selfLink: str
+    ownerNames: list
+    lastModifyingUserName: str
+    editable: bool
+    writersCanShare: bool
+    mimeType: str
+    exportLinks: dict
+    parents: list
+    thumbnailLink: str
+    appDataContents: bool
+    iconLink: str
+    shared: bool
+    lastModifyingUser: dict
+    owners: list
+    copyable: bool
+    etag: str
+    alternateLink: str
+    embedLink: str
+    fileSize: str
+    copyRequiresWriterPermission: bool
+    spaces: list
+    title: str
+    labels: dict
+    explicitlyTrashed: bool
+    createdDate: str
+    modifiedDate: str
+    lastViewedByMeDate: str
+    markedViewedByMeDate: str
+    quotaBytesUsed: str
+    version: str
+    capabilities: dict
 
     FOLDER_MIMETYPE = "application/vnd.google-apps.folder"
 
@@ -53,43 +89,6 @@ class GResource:
     def DEFAULT_FILENAME(self):
         """Devuelve el nombre de archivo (con extensión y fecha-hora actual) del recurso."""
         return f'{self.clean_title}_{now.string}{self.extension}'
-
-    __fields__: list[str]
-    """Tiene una lista de todos los campos permitidos en un pydrive.drive.GoogleDriveFile.
-       Para mejorar la lectura, deben estar en orden alfabetico, y de menor a mayor largo.
-       Son también campos de un GResource, se aplican en __init__."""
-
-    __fields__ = [
-        "appDataContents",  # bool
-        "capabilities"  # str
-        "copyRequiresWriterPermission",  # str
-        "copyable",  # bool
-        "editable",  # bool
-        "embedLink",  # str
-        "etag", "alternateLink",  # str
-        "explicitlyTrashed", "createdDate",  # dict
-        "iconLink",  # str
-        "id",  # str
-        "kind",  # str
-        "labels",  # str
-        "lastModifyingUser",  # dict
-        "lastModifyingUserName",  # str
-        "lastViewedByMeDate",  # str
-        "markedViewedByMeDate",  # str
-        "mimeType",  # str
-        "modifiedDate",  # bool
-        "ownerNames",  # list
-        "owners",  # list
-        "parents",  # list
-        "quotaBytesUsed",  # str
-        "selfLink",  # str
-        "shared",  # bool
-        "spaces",  # bool
-        "title",  # list
-        "userPermission",  # dict
-        "version",  # str
-        "writersCanShare",  # bool
-    ]
 
     def __init__(self, data: dict):
         for field in GResource.__fields__:
