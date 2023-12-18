@@ -89,6 +89,9 @@ class Verifica(Protocol):
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("'Verifica' no puede ser inicializado.")
 
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError("'Verifica' no puede ser inicializado.")
+
     @staticmethod
     def decorator(specialization_class, prefix):
         """Version no currificada del wrapper."""

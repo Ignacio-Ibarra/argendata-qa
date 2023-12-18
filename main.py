@@ -3,6 +3,7 @@ from logging import Logger
 from gwrappers import GResource, GAuth, GDrive, GFolder
 from logger import LoggerFactory
 from verificador.subtopico import Subtopico
+from verificador.verificadores_concretos import Test
 
 ARGENDATA_FOLDER_ID = '16Out5kOds2kfsbudRvSoHGHsDfCml1p0'
 VALID_NAMES = ["CAMCLI", "TRANEN", "CIETEC", "INVDES", "AGROPE", "COMEXT", "CRECIM", "DESHUM", "ESTPRO", "INDUST",

@@ -36,4 +36,4 @@ PRIORITY_ENCODINGS_WITH_ALIAS = ['utf_8', 'utf-8', 'U8', 'UTF', 'utf8', 'cp65001
 ESP_CHARSET: Iterable[str]
 """Es la lista de caracteres que se consideran válidos en una celda."""
 
-ESP_CHARSET = '0123456789abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZáéíóúÁÉÍÓÚ _-+.,()'
+ESP_CHARSET = '0123456789abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZáéíóúÁÉÍÓÚ _-+.,;()'

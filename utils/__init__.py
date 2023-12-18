@@ -84,3 +84,8 @@ class SupportsNext(Protocol[_T_co]):
 
 class SupportsIter(Protocol[_T_co]):
     def __iter__(self) -> _T_co: ...
+
+
+def getattrc(attr: str):
+    """Versión currificada de 'getattr'. La 'c' es de 'curry'."""
+    return lambda obj: getattr(obj, attr)
