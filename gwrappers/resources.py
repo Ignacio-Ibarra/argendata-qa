@@ -246,23 +246,22 @@ class GResource:
         GResource.log.debug(f"Successfully downloaded {str(self)} to {path}")
         return path
 
-
     def copy_to(self, other: 'str | GFolder', force=False, title_dest=None):
         if not title_dest:
             title_dest = self.title
 
         if isinstance(other, str):
             return self.copy_to(GResource.from_id(other), force=force, title_dest=title_dest)
-        
+
         if not force:
             if other.has(self) or other.has(GResource({'title': f'Copy of {self.title}', 'mimeType': self.mimeType})):
                 GResource.log.debug(f'Cannot copy {title_dest} to {other.title}: File already exists.')
                 return
-            
-        GDrive.instance.auth.service.files().copy(fileId=self.id, 
+
+        GDrive.instance.auth.service.files().copy(fileId=self.id,
                                                   body={'parents': [{'kind': 'drive#fileLink',
                                                                      'id': other.id}]}).execute()
-        
+
         GResource.log.debug(f'Successfully copied {title_dest} to {other.title}')
         return
 
@@ -368,7 +367,6 @@ class GFolder(GResource):
                              f"It has to be one of these: {', '.join(self.__find_strategies.keys())}")
 
         return method(self, value, *args, **kwargs)
-    
 
     def has(self, other: GResource):
         return GResource.exists(self.id, other.title, other.mimeType)
@@ -376,6 +374,8 @@ class GFolder(GResource):
 
 class GFile(GResource):
     """TODO: Subclase de GResource, provee utilidades específicas para operar con archivos."""
+
+    __slots__ = ['title', 'id', 'mimeType']
 
     def as_dict(self):
         return {
