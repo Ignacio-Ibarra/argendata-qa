@@ -1,5 +1,6 @@
+import csv
 from typing import TextIO
-
+from pandas import DataFrame, read_csv
 from gwrappers import GResource, GFile
 from utils import getattrc
 from utils.files.charsets import get_codecs
@@ -18,11 +19,38 @@ class TestCSV:
     def __init__(self, a: Archivo):
         self.a_verificar = a
 
-    def verificacion_encoding(self, csv):
-        codecs = get_codecs(csv)
-        if len(codecs) > 0:
-            self.log.info(' '.join(str(x) for x in codecs[0]))
-        return len(codecs) > 0
+    def verificacion_encoding(self, a_verificar):
+        codecs = get_codecs(a_verificar)
+        self.codec = 'utf-8' if len(codecs) <= 0 else codecs[0][0]
+        return self.codec
+    
+    def verificacion_delimiter(self, a_verificar):
+        codec = self.codec
+        with open(a_verificar, 'r', encoding=codec) as csvfile:
+            self.delimiter = str(csv.Sniffer().sniff(csvfile.read()).delimiter)
+        return self.delimiter
+
+class Plantilla(DataFrame):
+    ...
+
+class Consistencia(tuple[DataFrame, Plantilla]):
+    ...
+
+@Verifica[Consistencia, "verificacion_"]
+class TestConsistencia:
+    a_verificar: Consistencia
+    name: str
+
+    def __init__(self, df, plantilla) -> None:
+        self.a_verificar = (df, plantilla)
+    
+    def verificacion_nueva(self, a_verificar: Consistencia):
+        df, plantilla = a_verificar
+        ds_declarados = plantilla.loc[plantilla.dataset_archivo == self.name, ['dataset_archivo','variable_nombre','tipo_dato','primary_key','nullable']].drop_duplicates()
+        var_dtypes: list[tuple[str, str]] = \
+            df.dtypes.apply(lambda x: str(x)).reset_index().to_records(index=False).tolist()
+        
+        self.log.debug(var_dtypes)
 
 
 @Verifica[Subtopico, "verificacion_"]
@@ -64,5 +92,10 @@ class Test:
         result = dict()
         for x in a_verificar:
             path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
-            result[x.title] = TestCSV(x.title, path).verificar_todo()
+            resultados_csv = TestCSV(x.title, path).verificar_todo()
+            encoding = resultados_csv['verificacion_encoding']
+            delimiter = resultados_csv['verificacion_delimiter']
+            df = read_csv(path, delimiter=delimiter, encoding=encoding)
+            resultados_consistencia = TestConsistencia(x.title, df, subtopico.plantilla).verificar_todo()
+            
         return result
