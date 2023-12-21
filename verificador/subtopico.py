@@ -4,6 +4,7 @@ import pandas
 
 from gwrappers import GFolder, GResource, GDrive
 from pandas import DataFrame
+from verificadores_abstractos import Verificador
 
 from logger import LoggerFactory
 
@@ -57,5 +58,5 @@ class Subtopico:
         result.log.debug('Initialized correctly from name.')
         return result
 
-    def verificar(self, verificador: ...):
+    def verificar(self, verificador: Verificador) -> dict:
         return verificador(self.title, self).verificar_todo()

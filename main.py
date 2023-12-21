@@ -15,8 +15,10 @@ def main(log: Logger):
     auth = GAuth.authenticate()
     drive = GDrive(auth)
 
-    for subtopico in VALID_NAMES[:10]:
-        Subtopico.from_name(subtopico).verificar(Test)
+    # for subtopico in VALID_NAMES[:10]:
+    #     Subtopico.from_name(subtopico).verificar(Test)
+
+    Subtopico.from_name("TRANEN").verificar(Test)
 
 
 if __name__ == "__main__":
