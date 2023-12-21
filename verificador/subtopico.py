@@ -4,7 +4,7 @@ import pandas
 
 from gwrappers import GFolder, GResource, GDrive
 from pandas import DataFrame
-from verificadores_abstractos import Verificador
+from verificador.verificadores_abstractos import Verificador
 
 from logger import LoggerFactory
 
