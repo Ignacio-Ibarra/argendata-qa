@@ -1,54 +1,53 @@
 # Verificador
 
-La idea de éste módulo es tener bien segregadas las verificaciones que tienen que hacerse.
+Un `Verificador` es una clase que _verifica_ ciertas cualidades de una instancia de un objeto. Por ejemplo, un `Verificador` de (un) archivo puede asegurar que un archivo particular tenga un formato y/o encoding particular. Un verificador de (varios) archivos, puede asegurar que multiples archivos cumplan con la verificacion individual.
 
-Algunas verificaciones **necesitan** otras. Por ejemplo, es difícil mirar nombres de variables, etc si el encoding no es
-correcto. Pero para mirar el sistema de archivos; contar los datasets, scripts, variables declarados versus efectivos;
-mirar las extensiones (.csv, .docx, etc); entre otros, se pueden hacer sin conocer la codificación.
+Los verificadores tienen la siguiente estructura:
 
-Por ende, el objetivo tiene que ser identificar qué verificaciones bloquean a otras y cuáles no.
+```python
+@Verifica[<clase_de_verficacion: str|type>, <prefijo: str>]
+class <Nombre>:
+    atributo_1: Any
+    atributo2: Any
+    ...
 
-> [!CAUTION]
-> Hay código hardcodeado a fines de tener _algo_ que ejecutar.
+    def __init__(self, parametro_1, parametro_2, ...):
+        self.atributo_1 = parametro_1
+        self.atributo_2 = parametro_2
+        ...
 
-> [!WARNING]
-> Actualmente hay distintos verificadores a fin de testear la funcionalidad básica.
-> La estructura puede cambiar drásticamente, de tener varios verificadores a tener un
-> solo verificador con varias funciones.
+    def <prefijo><nombre>(self, <parametros>):
+        ...
+```
 
-> [!TIP]
-> Actualmente algunos verificadores como `VerificadorCSV` ejecuta automáticamente todas las verificaciones registradas 
-> con `verificar_todo()`. Éste patrón se podría replicar en otros verificadores que exploten mejor ésta funcionalidad.
+Y se usan así:
 
-# Notas sobre la pipeline de verificaciones
+```python
+<Nombre>(<nombre_instancia: str>, <parametro_1>, <parametro_2>, ...).verificar_todo()
+```
 
-- Cualquier chequeo sobre los archivos se tiene que hacer sobre la intersección de los declarados y los efectivos (no tiene sentido chequear efectivos no declarados).
+Donde:
 
-- Antes de cargar el dataframe, necesito saber el delimiter, pues puede cargarme todo en la misma columna si no lo especifico.
+- `clase_de_verificacion` : Es una string o una clase (un tipo). Es el tipo de lo que se va a verificar.
+- `prefijo` : Los métodos de la clase que empiecen con el prefijo, serán considerados como verificaciones a ejecutarse por `verificar_todo`.
+- `Nombre` : Es el nombre de la clase que verifica `clase_de_verificacion`.
 
-- Necesito el encoding para saber si está bien lo que estoy leyendo, por lo tanto:
-    - Si detecto un encoding LEGIBLE pero que no esté dentro de los encodings aceptados, devuelvo una advertencia.
-    - Siempre tengo que doble-chequear el encoding.
+Especial atención en los parámetros. El `__init__` de la clase toma directamente los parámetros (la instancia a verificar + info del contexto, si aplica). Sin embargo, cuando se instancia la verificación, se pasa un nombre de instancia. Por ejemplo, si estamos verificando un archivo, se pasa el nombre del archivo. Ésto posibilita que luego, cuando se loggean las acciones, se pueda especificar exactamente qué se está verificando en un momento dado.
 
+Los `parametros` de los métodos del verificador siempre comienzan con `self`, pero pueden incluír cualquiera de los `atributos` que se hayan definido en la clase. Si se indica un atributo como parámetro, en `verificar_todo` se pasará una referencia a dicho atributo, podiéndose usar así por el cuerpo del método.
 
-- Para poder chequear cardinalidad (que no haya dos datapoints exactamente iguales), dependo de conocer el formato wide/long. Pero como conocer el formato (ahora) no es determinista, no tengo certeza en ninguna de ambas. Lo mejor por ahora es:
-    - Chequear primero formato y, en función de la probabilidad de que esté incorrecto, enviar una advertencia.
-    - Siempre hacer el chequeo de la cardinalidad, con la salvedad de la advertencia anterior (que tiene que ser cubritiva respecto de los casos posibles)
+> [!NOTE]
+> Que los parámetros sean pasados por referencia implica que la única forma de
+> modificarlos es mutándolos. Re-asignar un parámetro por referencia no tiene efecto
+> (simplemente cambia el objeto al que apunta el mismo nombre).
+> Por ejemplo, un ejemplo de mutación es usar `append()` sobre una lista.
+> La muta, pero no la reasigna.
 
+Los métodos de un verificador (las _verificaciones_) se ejecutan todas juntas con `verificar_todo()`. El resultado de `verificar_todo()` es un diccionario que mapea:
 
+```
+<nombre_de_verificacion> : <resultado>
+```
 
-Chequeos FS:
+Cada verificación puede devolver algo (o nada). En cualquier caso, genera una entrada en el diccionario del resultado. Si no devuelve nada, entonces se registra un `None` para esa verificación.
 
-- 'google docs', no .docx
-- scripts/datasets declarados vs efectivos
-
-Chequeos archivos (en orden):
-- Codificacion correcta
-- Headers que no matcheen regex
-- Caracteres raros
-
-Chequeos consistencia:
-- Metadatos (en orden):
-    - Variables declaradas/efectivas
-    - Wide/Long
-    - Cardinalidad 
