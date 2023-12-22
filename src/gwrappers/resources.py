@@ -3,11 +3,11 @@ from logging import Logger
 from typing import Literal
 
 from pydrive.files import GoogleDriveFile
-from utils.files import file
-from utils.files.mime import extensions
-from gwrappers import GDrive
-from logger import inject_logger
-from utils import keys_included, now, stopwatch, json_to_file, MethodMapping
+from src.utils.files import file
+from src.utils.files.mime import extensions
+from src.gwrappers import GDrive
+from src.logger import inject_logger
+from src.utils import keys_included, now, stopwatch, json_to_file, MethodMapping
 
 
 @inject_logger('gresources')

@@ -1,5 +1,5 @@
-from utils.files import FileIterator, get_file_size
-from utils.files.charsets.constants import ESP_CHARSET, PRIORITY_ENCODINGS
+from src.utils.files import FileIterator, get_file_size
+from src.utils.files.charsets.constants import ESP_CHARSET, PRIORITY_ENCODINGS
 
 
 # TODO: Acá necesito saltearme las comillas porque los archivos .csv traen 'quoting' variable.

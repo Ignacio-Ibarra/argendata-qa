@@ -1,11 +1,11 @@
 import csv
 from typing import TextIO
 from pandas import DataFrame, read_csv
-from gwrappers import GResource, GFile
-from utils import getattrc
-from utils.files.charsets import get_codecs
-from verificador.subtopico import Subtopico
-from verificador.abstracto import Verifica
+from src.gwrappers import GResource, GFile
+from src.utils import getattrc
+from src.utils.files.charsets import get_codecs
+from src.verificador.subtopico import Subtopico
+from src.verificador.abstracto import Verifica
 
 
 @Verifica["Archivo", "verificacion_"]

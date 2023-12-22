@@ -4,7 +4,7 @@ from enum import Enum
 from functools import partial
 from io import TextIOWrapper
 from typing import Callable, TextIO, Generator
-from utils import SupportsIter, SupportsNext
+from src.utils import SupportsIter, SupportsNext
 
 
 def file(filename: str):

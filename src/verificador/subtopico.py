@@ -2,11 +2,11 @@ from logging import Logger
 
 import pandas
 
-from gwrappers import GFolder, GResource, GDrive
+from src.gwrappers import GFolder, GResource, GDrive
 from pandas import DataFrame
-from verificador.abstracto import Verificador
+from src.verificador.abstracto import Verificador
 
-from logger import LoggerFactory
+from src.logger import LoggerFactory
 
 
 # Esto lo creo para guardar algunas constantes globales al proyecto.
