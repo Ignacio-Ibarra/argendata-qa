@@ -5,12 +5,14 @@ from test import *
 import src
 from unittest import TextTestRunner
 
+
 def main(log: Logger):
     log.info('Corriendo tests unitarios...')
     suite = get_suite()
     TextTestRunner().run(suite)
     log.info('Ejecutando programa principal...')
     src.main(log)
+
 
 if __name__ == '__main__':
     log = LoggerFactory.getLogger('main')

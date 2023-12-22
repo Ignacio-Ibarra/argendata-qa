@@ -8,6 +8,7 @@ from unittest import TestCase
 @Verifica["blabla"]
 class VerificadorStrings:
     a_verificar: str
+    caracteres: Iterable[str]
 
     def __init__(self, a_verificar: str, caracteres):
         self.a_verificar = a_verificar
@@ -21,6 +22,7 @@ class VerificadorStrings:
 
     def verificar_conteo_caracteres(self, a_verificar: Final[Attribute[str]],
                                     caracteres: Final[Attribute[Iterable[str]]]):
+
         return [a_verificar.count(c) for c in caracteres]
 
     def verificar_modificar_caracteres(self, caracteres: Final[Attribute[Iterable[str]]]):
@@ -29,6 +31,9 @@ class VerificadorStrings:
 
     def verificar_conteo_postmutacion(self, a_verificar, caracteres: Final[Attribute[Iterable[str]]]):
         return [a_verificar.count(c) for c in caracteres]
+
+    def verificar_nada(self):
+        return 1+1
 
 
 class VerificadorStringTestsEstaticos(TestCase):
@@ -49,7 +54,7 @@ class VerificadorStringTestsEstaticos(TestCase):
         self.assertEqual(list(verificaciones.keys()),
                          ["verificar_a", "verificar_len",
                           "verificar_conteo_caracteres", "verificar_modificar_caracteres",
-                          'verificar_conteo_postmutacion'])
+                          'verificar_conteo_postmutacion', 'verificar_nada'])
 
 
 class VerificadorStringTestsDinamicos(TestCase):
@@ -75,6 +80,7 @@ class VerificadorStringTestsDinamicos(TestCase):
                     'verificar_len': True,
                     'verificar_conteo_caracteres': [1, 0],
                     'verificar_modificar_caracteres': ['c', 'd', 'a', 'b', 'c'],
-                    'verificar_conteo_postmutacion': [1, 0, 1, 1, 1]}
+                    'verificar_conteo_postmutacion': [1, 0, 1, 1, 1],
+                    'verificar_nada': 2}
 
         self.assertEqual(self.test.verificar_todo(), expected)
