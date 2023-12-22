@@ -1,12 +1,13 @@
-from tests_base import EncodingTest
+from test.utils.files.charsets.tests_base import EncodingTest
 import charset_normalizer
 import chardet
+
 
 def detectar_encodings_con_charsetnormalizer(filepath: str) -> str:
     try:
         with open(filepath, 'rb') as file:
             sample = file.read()
-        
+
         result = charset_normalizer.detect(sample)
 
         return result['encoding']
@@ -15,8 +16,10 @@ def detectar_encodings_con_charsetnormalizer(filepath: str) -> str:
         print(f"Error: {e}")
         return e.__class__.__name__
 
+
 @EncodingTest.testcase(detectar_encodings_con_charsetnormalizer)
 class Encodings1: pass
+
 
 def detectar_encodings_con_chardet(filepath: str) -> str:
     try:
@@ -39,16 +42,18 @@ def detectar_encodings_con_chardet(filepath: str) -> str:
             return detected_encoding
     except Exception as e:
         return e.__class__.__name__
-    
+
+
 @EncodingTest.testcase(detectar_encodings_con_chardet)
 class Encodings3: pass
+
 
 #  def detectar_encodings_con_bloques(filepath: str) -> str:
 #      ...
 #      ...
 #      ...
 #      return 'mac_latin2'
-#  
+#
 #  @EncodingTest.testcase(detectar_encodings_con_bloques)
 #  class Encodings2: pass
 

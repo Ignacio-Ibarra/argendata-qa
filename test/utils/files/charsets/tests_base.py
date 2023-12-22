@@ -59,10 +59,10 @@ class EncodingTest:
                 function = staticmethod(f)
                 files = []
                 encodings_expected: dict
-                with open('./testfiles_encoding/encodings.json', 'r') as fp:
+                with open('./test/utils/files/charsets/testfiles_encoding/encodings.json', 'r') as fp:
                     encodings_expected = json.load(fp)
 
-            for file in glob('./testfiles_encoding/*.csv'):
+            for file in glob('./test/utils/files/charsets/testfiles_encoding/*.csv'):
                 name = os.path.basename(file)
                 name = without_extension(name)
                 NewClass.files.append(name)
@@ -76,9 +76,13 @@ class EncodingTest:
         return make_testcase
 
     @staticmethod
-    def run_all():
+    def get_suite():
         loader = TestLoader()
         suite = TestSuite()
         for test in EncodingTest.gtests:
             suite.addTest(loader.loadTestsFromTestCase(test))
-        TextTestRunner().run(suite)
+        return suite
+
+    @staticmethod
+    def run_all():
+        TextTestRunner().run(EncodingTest.get_suite())

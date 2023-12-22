@@ -1,0 +1,1 @@
+from src.verificador import *

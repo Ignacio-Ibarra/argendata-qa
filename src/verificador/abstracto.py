@@ -1,5 +1,5 @@
 from typing import Protocol, TypeVar, Type, Generic, Final
-from logger import LoggerFactory
+from src.logger import LoggerFactory
 import inspect
 from inspect import Parameter
 from types import MappingProxyType
@@ -126,3 +126,35 @@ class Verifica(Protocol):
             args: tuple[Type, str]
             prefix = args[1]
         return Verifica.decorator(specialization_class, prefix)
+
+
+# Formato resultado final
+
+__resultado__ = {
+        'cant_datasets_decl': None,
+        'cant_datasets_efvos': None,
+        'cant_graf_errores': None,
+        'cant_graficos': None,
+        'cant_scripts_decl': None,
+        'cant_scripts_declarados_no_cargados': None,
+        'cant_scripts_efectivos_no_declarados': None,
+        'cant_scripts_efvos': None,
+        'cant_variables_no_cargadas': None,
+        'cant_variables_no_declaradas': None,
+        'cant_variables_verificadas': None,
+        'columnas_con_nulos': None,
+        'control_calidad': None,
+        'datasets_a_verificar': None,
+        'datasets_declarados_no_cargados': None,
+        'datasets_efectivos_no_declarados': None,
+        'encoding_delimiter_df': None,
+        'fecha_verificacion': None,
+        'graf_errores': None,
+        'insepccion_fuentes': None,
+        'scripts_declarados_no_cargados': None,
+        'scripts_efectivos_no_declarados': None,
+        'subtopico': None,
+        'variables_no_cargadas': None,
+        'variables_no_declaradas': None,
+        'variables_tipo_dato_verificar': None
+}
