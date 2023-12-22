@@ -78,6 +78,7 @@ def keys_included(required_keys, data):
 _T_co = TypeVar('_T_co')
 _T = TypeVar('_T')
 
+
 class SupportsNext(Protocol[_T_co]):
     def __next__(self) -> _T_co: ...
 
@@ -85,13 +86,16 @@ class SupportsNext(Protocol[_T_co]):
 class SupportsIter(Protocol[_T_co]):
     def __iter__(self) -> _T_co: ...
 
+
 class Attribute(Generic[_T]): pass
 
 class Final(Generic[_T]):
     """Indica que la variable no puede ser reasignada, pero si puede mutar."""
 
+
 class Mutable(Generic[_T]):
     """Indica que la variable puede ser reasignada y mutar"""
+
 
 class Inmutable(Generic[_T]):
     """Indica que la variable no puede ser reasignada ni mutar"""

@@ -9,7 +9,7 @@ from src.verificador.abstracto import Verifica
 
 
 @Verifica["Archivo", "verificacion_"]
-class TestCSV:
+class ControlCSV:
     a_verificar: str
 
     def __init__(self, path: str):
@@ -27,7 +27,7 @@ class TestCSV:
         return self.delimiter
 
 @Verifica["Consistencia", "verificacion_"]
-class TestConsistencia:
+class ControlConsistencia:
     df : DataFrame
     plantilla : DataFrame
     name: str
@@ -45,7 +45,7 @@ class TestConsistencia:
 
 
 @Verifica[Subtopico, "verificacion_"]
-class Test:
+class ControlSubtopico:
     a_verificar: Subtopico
 
     class ConteoArchivos:
@@ -67,7 +67,7 @@ class Test:
 
     def verificacion_sistema_de_archivos(self, a_verificar):
         plantilla = a_verificar.plantilla
-        datasets = Test.ConteoArchivos()
+        datasets = ControlSubtopico.ConteoArchivos()
         datasets.declarados = set(plantilla['dataset_archivo'])
         datasets.efectivos = set(
             map(getattrc('title'), GResource.from_id('1JHDYAk1hL35DOrhh5TWlSLF0YbwCi8sL').resources))
@@ -83,10 +83,10 @@ class Test:
         result = dict()
         for x in csvs:
             path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
-            resultados_csv = TestCSV(x.title, path).verificar_todo()
+            resultados_csv = ControlCSV(x.title, path).verificar_todo()
             encoding = resultados_csv['verificacion_encoding']
             delimiter = resultados_csv['verificacion_delimiter']
             df = read_csv(path, delimiter=delimiter, encoding=encoding)
-            resultados_consistencia = TestConsistencia(x.title, df, a_verificar.plantilla).verificar_todo()
+            resultados_consistencia = ControlConsistencia(x.title, df, a_verificar.plantilla).verificar_todo()
             
         return result
