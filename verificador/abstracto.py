@@ -1,19 +1,20 @@
-from typing import Protocol, TypeVar, Type, Any
+from typing import Protocol, TypeVar, Type, Generic, Final
 from logger import LoggerFactory
+import inspect
+from inspect import Parameter
+from types import MappingProxyType
 
 T = TypeVar('T')
 
-
 class Verificador(Protocol[T]):
     """Protocolo abstracto para que los métodos que tomen verificadores estén bien tipados y cumplan con la interfaz."""
-    def __init__(self, name: str, other: object, *args, **kwargs):
-        """Ver `Verifica`"""
-        ...
 
-    def verificar_todo(self):
+    def __init__(self, name: str, other: object, *args, **kwargs): 
+        """Ver `Verifica`"""
+
+    def verificar_todo(self) -> dict:
         """Ejecuta todos los métodos que comiencen con el prefijo determinado. (Ver `Verifica`)
            :returns: Un diccionario que asocia <nombre_de_metodo> ~ <resultado> """
-        ...
 
 
 def __wrapper__(specialization_class, wrapped_class, prefix) -> Type:
@@ -27,37 +28,40 @@ def __wrapper__(specialization_class, wrapped_class, prefix) -> Type:
     Se le agrega la funcionalidad de `verificar_todo()`, junto con el logger que especifica la subclase de verificador
     y la clase que verifica.
     """
-    class NewClass(wrapped_class):  # Virtualmente cumple con el protocolo de Verificador.
+
+    class DynamicExecutor(wrapped_class):  # Virtualmente cumple con el protocolo de Verificador.
         __name__ = wrapped_class.__name__
-        _verificaciones = dict()
+        _verificaciones: dict[str, tuple[callable, list[str]]] = dict()
+        __specialization_classname__ = specialization_class if isinstance(specialization_class,
+                                                                          str) else specialization_class.__name__
 
         def __init__(self, name: str, *args, **kwargs):
-            self.name = name
             self.log = \
-                LoggerFactory.getLogger(f'Verificador<{specialization_class.__name__}>.{__class__.__name__}<{name}>')
+                LoggerFactory.getLogger(f'Verificador<{self.__specialization_classname__}>.{__class__.__name__}<{name}>')
+            self.name = name
             self.a_verificar = None
             wrapped_class.__init__(self, *args, **kwargs)
-
-        def verificar_todo(self) -> dict[str, Any]:
-            """Ejecuta todos los métodos que comiencen con el prefijo determinado.
-               :returns: Un diccionario que asocia <nombre_de_metodo> ~ <resultado> """
-            result = {}
-            self.log.info("Comenzando verificación completa...")
-            self.log.debug(f"Ejecutando todos los métodos con prefijo '{prefix}'...")
-            args = (self, self.a_verificar) if self.a_verificar else (self,)
-            for name, value in vars(wrapped_class).items():
-                if callable(value) and name.startswith(prefix):
-                    result[name] = value(*args)
-
-            self.log.info("Verificación completa terminada!")
-            return result
 
         def __str__(self):
             return __class__.__name__
 
-    NewClass.__name__ = wrapped_class.__name__
+        def verificar_todo(self) -> dict:
+            result = dict()
+            for name, (method, parameters) in self._verificaciones.items():
+                params = tuple(getattr(self, name) for name in parameters)
+                result[name] = method(self, *params)
+            return result
 
-    return NewClass
+    DynamicExecutor.__name__ = wrapped_class.__name__
+
+    for name, method in wrapped_class.__dict__.items():
+        if callable(method) and name.startswith(prefix):
+            parameters: MappingProxyType[str, Parameter] = inspect.signature(method).parameters
+            parameters: filter[str] = filter(lambda x: x != 'self', parameters.keys())
+            parameters: list[str] = list(parameters)
+            DynamicExecutor._verificaciones[name] = (method, parameters) 
+
+    return DynamicExecutor
 
 
 class Verifica(Protocol):
@@ -93,16 +97,17 @@ class Verifica(Protocol):
         raise NotImplementedError("'Verifica' no puede ser inicializado.")
 
     @staticmethod
-    def decorator(specialization_class, prefix):
+    def decorator(specialization_class, prefix) -> callable:
         """Version no currificada del wrapper."""
-        def wrapper(wrapped_class):
+
+        def wrapper(wrapped_class) -> Type:
             """Currifico sólo la clase decorada"""
             return __wrapper__(specialization_class, wrapped_class, prefix=prefix)
 
         return wrapper
 
     @staticmethod
-    def __class_getitem__(*args, **kwargs):
+    def __class_getitem__(*args, **kwargs) -> Type:
         """Utilidad para instanciar @Verifica como un tipo genérico."""
         if not isinstance(args[0], tuple):
             return Verifica.decorator(args[0], 'verificar_')
@@ -118,24 +123,6 @@ class Verifica(Protocol):
         if len(args) > 1:
             if not isinstance(args[1], str):
                 raise TypeError("El segundo argumento debe ser una 'str' por ser el prefijo.")
-            args: tuple[Type, str, ...]
+            args: tuple[Type, str]
             prefix = args[1]
         return Verifica.decorator(specialization_class, prefix)
-
-
-"""Ejemplo:
-
-@Verifica[set]
-class VerificadorDeConjuntos:
-    def __init__(self, other: set):
-        self.conjunto = other
-    def verificar_1(self):
-        if not len(self.conjunto):
-            self.log.info("Conjunto vacio")
-        else:
-            return all(map(lambda x: x > 2, self.conjunto))
-
-if __name__ == "__main__":
-    s = {6, 7, 3, 4, 5}
-    print( VerificadorDeConjuntos('', s).verificar_todo() )
-"""
