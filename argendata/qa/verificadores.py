@@ -8,7 +8,7 @@ from .subtopico import Subtopico
 from .verificador.abstracto import Verifica
 
 
-@Verifica["Archivo", "verificacion_"]
+@Verifica["Archivo"]
 class ControlCSV:
     a_verificar: str
 
@@ -26,7 +26,7 @@ class ControlCSV:
             self.delimiter = str(csv.Sniffer().sniff(csvfile.read()).delimiter)
         return self.delimiter
 
-@Verifica["Consistencia", "verificacion_"]
+@Verifica["Consistencia"]
 class ControlConsistencia:
     df : DataFrame
     plantilla : DataFrame
@@ -44,7 +44,7 @@ class ControlConsistencia:
         self.log.debug(var_dtypes)
 
 
-@Verifica[Subtopico, "verificacion_"]
+@Verifica[Subtopico]
 class ControlSubtopico:
     a_verificar: Subtopico
 
@@ -69,7 +69,6 @@ class ControlSubtopico:
         plantilla = a_verificar.plantilla
         datasets = ControlSubtopico.ConteoArchivos()
         datasets.declarados = set(plantilla['dataset_archivo'])
-
         datasets.efectivos = set(
             map(getattrc('title'), a_verificar.dataset.resources))
 

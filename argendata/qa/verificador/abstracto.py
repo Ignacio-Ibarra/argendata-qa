@@ -105,12 +105,14 @@ class Verifica(Protocol):
             return __wrapper__(specialization_class, wrapped_class, prefix=prefix)
 
         return wrapper
+    
+    DEFAULT_PREFIX = 'verificacion_'
 
     @staticmethod
     def __class_getitem__(*args, **kwargs) -> Type:
         """Utilidad para instanciar @Verifica como un tipo genérico."""
         if not isinstance(args[0], tuple):
-            return Verifica.decorator(args[0], 'verificar_')
+            return Verifica.decorator(args[0], Verifica.DEFAULT_PREFIX)
 
         args: tuple[tuple, ...]
         args: tuple[Type, ...] = args[0]
@@ -118,7 +120,7 @@ class Verifica(Protocol):
             raise TypeError("Verifica lleva al menos un parámetro de especialización.")
 
         specialization_class = args[0]
-        prefix = 'verificar_'
+        prefix = Verifica.DEFAULT_PREFIX
 
         if len(args) > 1:
             if not isinstance(args[1], str):
