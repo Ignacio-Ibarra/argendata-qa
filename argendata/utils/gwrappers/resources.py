@@ -9,6 +9,7 @@ from argendata.utils.gwrappers import GDrive
 from argendata.utils.logger import inject_logger
 from argendata.utils import keys_included, now, stopwatch, json_to_file, MethodMapping
 from argendata.utils import parse_time_arg, timeformat
+from .rosefiletrees import traverse_pre_order
 
 
 @inject_logger('gresources')
