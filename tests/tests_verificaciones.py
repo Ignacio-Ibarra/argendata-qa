@@ -1,6 +1,6 @@
 from unittest import TestCase
+import pandas as pd
 from argendata.qa import ControlSubtopico
-from argendata.qa.verificaciones import *
 
 class TestVerificacionNivelRegistro(TestCase):
     
