@@ -34,12 +34,16 @@ class Singleton(type):
 class MethodMapping(dict):
     """Diccionario que asocia claves a funciones. Sirve para crear selectores de estrategia."""
 
-    def register(self, key):
-        def wrapper(f: callable):
-            self[key] = f
-            return f
+    def __register__(self, key, f):
+        self[key] = f
+        return f
 
-        return wrapper
+    def register(self, key_or_alias):
+        match key_or_alias:
+            case alias if isinstance(key_or_alias, str):
+                return lambda f: self.__register__(alias, f)
+            case function if callable(key_or_alias):
+                return self.__register__(function.__name__, function)
 
 
 class staticproperty(property):
