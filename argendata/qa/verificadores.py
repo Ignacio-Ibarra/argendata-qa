@@ -3,7 +3,7 @@ from typing import TextIO
 from pandas import DataFrame, read_csv
 import numpy as np
 from argendata.utils.gwrappers import GResource, GFile
-from argendata.utils import getattrc
+from argendata.utils import getattrc, strip_accents, dtypes_conversion as dtype_map
 from argendata.utils.files.charsets import get_codecs
 from .subtopico import Subtopico
 from .verificador.abstracto import Verifica
@@ -93,6 +93,20 @@ class ControlSubtopico:
 
     def verificacion_sistema_de_archivos(self, a_verificar: Subtopico):
         plantilla = a_verificar.plantilla
+
+        # FIXME: Esto está adaptado así nomás y CREO que no está mutando correctamente
+        # la plantilla con los tipos de datos nuevos. Revisar.
+
+        columnas = ['dataset_archivo','variable_nombre','tipo_dato','primary_key','nullable']
+        datasets_declarados_df: DataFrame = plantilla[columnas].drop_duplicates()
+
+        _tipo_dato = datasets_declarados_df.loc[:, 'tipo_dato']
+        _tipo_dato = _tipo_dato.str.lower().apply(strip_accents)
+        _tipo_dato = _tipo_dato.map(dtype_map).fillna("no completo")
+
+        datasets_declarados_df.loc[:, 'tipo_dato'] = _tipo_dato
+
+
         datasets = ControlSubtopico.ConteoArchivos()
         datasets.declarados = set(plantilla['dataset_archivo'])
         datasets.efectivos = set(
@@ -119,7 +133,14 @@ class ControlSubtopico:
         self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
 
     
+    @staticmethod
+    def verificar_variables(declarados: DataFrame, df: DataFrame, filename: str):
+        dtypes = df.dtypes.apply(str).reset_index().to_records(index=False).tolist()
 
+        slice_dataset = declarados[declarados.dataset_archivo == filename]
+        variables = slice_dataset[['variable_nombre', 'tipo_dato']].to_records(index=False).tolist()
+
+        return dtypes == variables
 
     def verificacion_datasets(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)
@@ -130,5 +151,10 @@ class ControlSubtopico:
             encoding = resultados_csv['verificacion_encoding']
             delimiter = resultados_csv['verificacion_delimiter']
             df = read_csv(path, delimiter=delimiter, encoding=encoding)
+
+            # FIXME: Esto da falso porque no se están mutando los dtypes de la plantilla.
+            verif_variables = ControlSubtopico.verificar_variables(a_verificar.plantilla, df, x.title)
+            self.log.debug(f'Verificacion variables {x.title}: {verif_variables}')
             
+
         return result

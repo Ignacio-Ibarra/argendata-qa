@@ -106,3 +106,46 @@ class Inmutable(Generic[_T]):
 def getattrc(attr: str):
     """Versión currificada de 'getattr'. La 'c' es de 'curry'."""
     return lambda obj: getattr(obj, attr)
+
+
+# Utils Verificaciones =================================================================================================
+
+dtypes_conversion = {
+    'alfanumerico': 'object', 
+    'dicotomico': 'bool',
+    'entero': 'int64', 
+    'real': 'float64', 
+    '': 'no completo'
+    }
+
+def useattr(obj, attr: str):
+    return getattr(obj, attr)
+
+def strips(x: str) -> str:
+    return useattr(x, 'strip')()
+
+def strip_accents(input_str: str) -> str:
+    accent_map = {
+        'ÀÁÂÃÄÅ': 'A',
+        'àáâãäå': 'a',
+        'ÈÉÊË': 'E',
+        'èéêë': 'e',
+        'ÌÍÎÏ': 'I',
+        'ìíîï': 'i',
+        'ÒÓÔÕÖØ': 'O',
+        'òóôõöø': 'o',
+        'ÙÚÛÜ': 'U',
+        'ùúûü': 'u',
+        'Ý': 'Y',
+        'ýÿ': 'y',
+        'Ñ': 'N',
+        'ñ': 'n',
+        'Ç': 'C',
+        'ç': 'c'
+    }
+
+    for accented_chars, unaccented_char in accent_map.items():
+        for accented_char in accented_chars:
+            input_str = input_str.replace(accented_char, unaccented_char)
+
+    return input_str
