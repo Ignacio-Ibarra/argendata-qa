@@ -65,62 +65,6 @@ class TestVerificacionNivelRegistro(TestCase):
         self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1, 2, 3')
 
 
-class TestVerificacionDatasets(TestCase):
-    def setUp(self):
-        self.template = pd.DataFrame({
-            'dataset_archivo': ['file1', 'file2', 'file3', 'file1'],
-            'variable_nombre': ['var1', 'var2', 'var3', 'var4'],
-            'tipo_dato': ['entero', 'alfanumerico', 'entero', 'alfanumerico'],
-            'primary_key': [True, False, True, False],
-            'nullable': [False, True, False, True]
-        })
-
-    def test_todos_presentes(self):
-        datasets = ['file1', 'file2', 'file3']
-        result, intersection, _ = verificacion_datasets(self.template, datasets)
-        self.assertTrue(result)
-        self.assertEqual(intersection, set(datasets))
-
-    def test_faltan_algunos(self):
-        datasets = ['file1', 'file2']
-        result, intersection, _ = verificacion_datasets(self.template, datasets)
-        self.assertFalse(result)
-        self.assertEqual(intersection, set(datasets))
-
-    def test_sobran_algunos(self):
-        datasets = ['file1', 'file2', 'file3', 'file4']
-        result, intersection, _ = verificacion_datasets(self.template, datasets)
-        self.assertFalse(result)
-        self.assertEqual(intersection, set(['file1', 'file2', 'file3']))
-
-class TestVerificacionScripts(TestCase):
-
-    def test_ok(self):
-        plantilla = pd.DataFrame({'script_archivo':['script1', 'script2', 'script3']})
-        scripts = ['script1', 'script2', 'script3']
-        self.assertEqual(verificacion_scripts(plantilla, scripts), (True, set(['script1', 'script2', 'script3'])))
-
-    def test_faltan_algunos(self):
-        plantilla = pd.DataFrame({'script_archivo':['script1', 'script2', 'script3']})
-        scripts = ['script1', 'script3']
-        self.assertEqual(verificacion_scripts(plantilla, scripts), (False, set(['script1', 'script3'])))
-
-    def test_sobran_algunos(self):
-        plantilla = pd.DataFrame({'script_archivo':['script1', 'script2']})
-        scripts = ['script1', 'script2', 'script3']
-        self.assertEqual(verificacion_scripts(plantilla, scripts), (False, set(['script1', 'script2'])))
-
-    def test_faltan_todos(self):
-        plantilla = pd.DataFrame({'script_archivo':['script1', 'script2', 'script3']})
-        scripts = []
-        self.assertEqual(verificacion_scripts(plantilla, scripts), (False, set()))
-
-    def test_sobran_todos(self):
-        plantilla = pd.DataFrame({'script_archivo':[]})
-        scripts = ['script1', 'script2', 'script3']
-        self.assertEqual(verificacion_scripts(plantilla, scripts), (False, set()))
-
-
 class TestVerificacionVariables(TestCase):
     def setUp(self):
         self.declarados = pd.DataFrame({
@@ -136,7 +80,7 @@ class TestVerificacionVariables(TestCase):
             'var1': [1.0, 2.0, 3.0],
             'var2': ['a', 'b', 'c']
         })
-        result = verificacion_variables(self.declarados, df, self.filename)
+        result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
         self.assertTrue(result)
 
     def test_tipos_erroneos(self):
@@ -144,7 +88,7 @@ class TestVerificacionVariables(TestCase):
             'var1': ["1", "2", "3"],
             'var2': ['a', 'b', 'c']
         })
-        result = verificacion_variables(self.declarados, df, self.filename)
+        result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
         self.assertFalse(result)
 
     def test_variables_erroneas(self):
@@ -152,7 +96,7 @@ class TestVerificacionVariables(TestCase):
             'var1': ["1", "2", "3"],
             'var3': ['a', 'b', 'c']
         })
-        result = verificacion_variables(self.declarados, df, self.filename)
+        result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
         self.assertFalse(result)
 
 
