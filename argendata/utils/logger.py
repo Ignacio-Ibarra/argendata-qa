@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytz
 
-from src.utils.colors import Color
+from .colors import Color
 
 
 class LoggerFormatter(logging.Formatter):

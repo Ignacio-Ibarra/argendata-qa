@@ -3,9 +3,9 @@ import os
 import pydrive, pydrive.auth, pydrive.drive
 import requests
 
-from src.logger import inject_logger
-from src.utils import staticproperty, Singleton
-from src.utils.files import file
+from argendata.utils.logger import inject_logger
+from argendata.utils import staticproperty, Singleton
+from argendata.utils.files import file
 
 
 @inject_logger('google_authentication')

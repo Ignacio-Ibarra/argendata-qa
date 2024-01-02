@@ -1,6 +1,5 @@
-from src.utils.files import FileIterator, get_file_size
-from src.utils.files.charsets.constants import ESP_CHARSET, PRIORITY_ENCODINGS
-
+from .constants import *
+from argendata.utils.files import FileIterator, get_file_size
 
 # TODO: Acá necesito saltearme las comillas porque los archivos .csv traen 'quoting' variable.
 #   el criterio de ésta función es "sólo encargarse del encoding" es decir, no estoy chequeando si hay o no
