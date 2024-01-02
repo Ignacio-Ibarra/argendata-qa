@@ -289,7 +289,7 @@ class GFolder(GResource):
     __find_strategies = MethodMapping()
 
     @property
-    def resources(self):
+    def resources(self) -> list[GResource]:
         filelist: list[GoogleDriveFile] = \
             GDrive.instance.ListFile({'q': f"'{self.id}' in parents and trashed=false"}).GetList()
 

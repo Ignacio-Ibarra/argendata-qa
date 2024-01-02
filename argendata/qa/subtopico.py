@@ -19,7 +19,7 @@ class Subtopico:
     plantilla: DataFrame
     log: Logger
 
-    def detectar_entregas(self):
+    def detectar_entregas(self) -> list[GResource]:
         return self.carpeta.find_by_recursion('datasets/outputs').resources
 
     def __init__(self, other: GFolder | str):
@@ -37,7 +37,7 @@ class Subtopico:
 
         # FIXME: Cambiar ésto para agarrar la última entrega, o bien decidir en función de la cantidad de archivos.
         #   Está hardcodeado sólo para poder testearlo.
-        self.dataset = next(filter(lambda x: 'primera' in x.title, self.detectar_entregas()))
+        self.dataset: GFolder = next(filter(lambda x: 'primera' in x.title, self.detectar_entregas()))
         self.log.debug(f'Found dataset with version {self.dataset.title}')
 
     @classmethod

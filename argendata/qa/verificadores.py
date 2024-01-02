@@ -65,18 +65,31 @@ class ControlSubtopico:
     def __init__(self, s: Subtopico):
         self.a_verificar = s
 
-    def verificacion_sistema_de_archivos(self, a_verificar):
+    def verificacion_sistema_de_archivos(self, a_verificar: Subtopico):
         plantilla = a_verificar.plantilla
         datasets = ControlSubtopico.ConteoArchivos()
         datasets.declarados = set(plantilla['dataset_archivo'])
+
         datasets.efectivos = set(
-            map(getattrc('title'), GResource.from_id('1JHDYAk1hL35DOrhh5TWlSLF0YbwCi8sL').resources))
+            map(getattrc('title'), a_verificar.dataset.resources))
 
         self.dataset = datasets.interseccion
 
-        self.log.debug(f'Datasets declarados = {datasets.declarados}')
-        self.log.debug(f'Datasets efectivos = {datasets.efectivos}')
-        self.log.debug(f'Intersección = {self.dataset}')
+        self.log.debug(f'#Datasets declarados = {len(datasets.declarados)}')
+        self.log.debug(f'#Datasets efectivos = {len(datasets.efectivos)}')
+        self.log.debug(f'#Intersección = {len(self.dataset)}')
+
+        scripts_carpeta = a_verificar.carpeta.find_by_name('scripts')
+        scripts = ControlSubtopico.ConteoArchivos()
+        scripts.declarados = set(plantilla['script_archivo'])
+        scripts.efectivos = set(
+            map(getattrc('title'), scripts_carpeta.resources))
+
+        self.scripts = scripts.interseccion
+        self.log.debug(f'#Scripts declarados = {len(scripts.declarados)}')
+        self.log.debug(f'#Scripts efectivos = {len(scripts.efectivos)}')
+        self.log.debug(f'#Intersección = {len(self.scripts)}')
+
 
     def verificacion_dataset(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.dataset, a_verificar.dataset.resources)
