@@ -27,27 +27,11 @@ class ControlCSV:
             self.delimiter = str(csv.Sniffer().sniff(csvfile.read()).delimiter)
         return self.delimiter
 
-@Verifica["Consistencia"]
-class ControlConsistencia:
-    df : DataFrame
-    plantilla : DataFrame
-    name: str
-
-    def __init__(self, df, plantilla) -> None:
-        self.df = df
-        self.plantilla = plantilla
-    
-    def verificacion_nueva(self, df, plantilla):
-        ds_declarados = plantilla.loc[plantilla.dataset_archivo == self.name, ['dataset_archivo','variable_nombre','tipo_dato','primary_key','nullable']].drop_duplicates()
-        var_dtypes: list[tuple[str, str]] = \
-            df.dtypes.apply(lambda x: str(x)).reset_index().to_records(index=False).tolist()
-        
-        self.log.debug(var_dtypes)
-
 
 @Verifica[Subtopico]
 class ControlSubtopico:
     a_verificar: Subtopico
+    datasets: set[str]
 
     class ConteoArchivos:
         declarados: None | set[str]
@@ -102,7 +86,7 @@ class ControlSubtopico:
         return _plantilla
 
     def verificacion_nivel_registro(self, a_verificar: Subtopico):
-        return ControlSubtopico.verifica_nivel_registro(a_verificar.plantilla)
+        return ControlSubtopico.verificar_nivel_registro(a_verificar.plantilla)
 
     def verificacion_fuentes(self, a_verificar: Subtopico):
         return ControlSubtopico.inspeccion_fuentes(a_verificar.plantilla)
@@ -114,11 +98,11 @@ class ControlSubtopico:
         datasets.efectivos = set(
             map(getattrc('title'), a_verificar.dataset.resources))
 
-        self.dataset = datasets.interseccion
+        self.datasets = datasets.interseccion
 
         self.log.debug(f'#Datasets declarados = {len(datasets.declarados)}')
         self.log.debug(f'#Datasets efectivos = {len(datasets.efectivos)}')
-        self.log.debug(f'#Intersección = {len(self.dataset)}')
+        self.log.debug(f'#Intersección = {len(self.datasets)}')
 
         scripts_carpeta = a_verificar.carpeta.find_by_name('scripts')
         scripts = ControlSubtopico.ConteoArchivos()
@@ -131,11 +115,14 @@ class ControlSubtopico:
         self.log.debug(f'#Scripts efectivos = {len(scripts.efectivos)}')
         self.log.debug(f'#Intersección = {len(self.scripts)}')
 
-        ControlSubtopico.verificar_completitud(plantilla, self.dataset)
+        completitud = ControlSubtopico.verificar_completitud(plantilla, self.datasets)
+        self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
+
+    
 
 
     def verificacion_datasets(self, a_verificar):
-        csvs: filter[GFile] = filter(lambda x: x.title in self.dataset, a_verificar.dataset.resources)
+        csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)
         result = dict()
         for x in csvs:
             path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
@@ -143,6 +130,5 @@ class ControlSubtopico:
             encoding = resultados_csv['verificacion_encoding']
             delimiter = resultados_csv['verificacion_delimiter']
             df = read_csv(path, delimiter=delimiter, encoding=encoding)
-            resultados_consistencia = ControlConsistencia(x.title, df, a_verificar.plantilla).verificar_todo()
             
         return result
