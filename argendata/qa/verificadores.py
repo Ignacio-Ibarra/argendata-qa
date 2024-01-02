@@ -1,6 +1,7 @@
 import csv
 from typing import TextIO
 from pandas import DataFrame, read_csv
+import numpy as np
 from argendata.utils.gwrappers import GResource, GFile
 from argendata.utils import getattrc
 from argendata.utils.files.charsets import get_codecs
@@ -65,6 +66,47 @@ class ControlSubtopico:
     def __init__(self, s: Subtopico):
         self.a_verificar = s
 
+    @staticmethod
+    def verificar_nivel_registro(plantilla, 
+                                columnas = ['orden_grafico','dataset_archivo','script_archivo', 
+                                           'variable_nombre','url_path','fuente_nombre','institucion']):
+        """Verifica que no haya registros duplicados en la plantilla. Los registros son
+        observablemente iguales si tienen los mismos valores en todas las columnas especificadas."""
+
+        result = None
+        n_graficos = len(set(plantilla['orden_grafico']))
+
+        nivel_registro = plantilla.groupby(columnas).size()    
+        errores = np.unique(nivel_registro[nivel_registro > 1].index.get_level_values('orden_grafico').tolist())
+        if len(errores) > 0:
+           result = ", ".join(map(str, errores))
+
+        return result
+
+    @staticmethod    
+    def inspeccion_fuentes(plantilla, columnas=['fuente_nombre', 'institucion']):
+        return plantilla[columnas].dropna().drop_duplicates()
+    
+    @staticmethod
+    def verificar_completitud(plantilla: DataFrame, 
+                              datasets: set[str], 
+                              not_target: list[str] = ['seccion_desc','nivel_agregacion', 'unidad_medida']) -> DataFrame:
+        """Busca filas incompletas"""
+        _plantilla = plantilla.copy()
+        _plantilla = _plantilla.loc[_plantilla.dataset_archivo.isin(datasets), _plantilla.columns.difference(not_target)] 
+        _plantilla = _plantilla.groupby('dataset_archivo').agg(lambda x: x.isna().sum())
+        _plantilla = _plantilla.stack().reset_index()
+        _plantilla.columns = ['dataset_archivo','columna_plantilla','filas_incompletas']
+        _plantilla = _plantilla[_plantilla.filas_incompletas > 0]
+
+        return _plantilla
+
+    def verificacion_nivel_registro(self, a_verificar: Subtopico):
+        return ControlSubtopico.verifica_nivel_registro(a_verificar.plantilla)
+
+    def verificacion_fuentes(self, a_verificar: Subtopico):
+        return ControlSubtopico.inspeccion_fuentes(a_verificar.plantilla)
+
     def verificacion_sistema_de_archivos(self, a_verificar: Subtopico):
         plantilla = a_verificar.plantilla
         datasets = ControlSubtopico.ConteoArchivos()
@@ -89,8 +131,10 @@ class ControlSubtopico:
         self.log.debug(f'#Scripts efectivos = {len(scripts.efectivos)}')
         self.log.debug(f'#Intersección = {len(self.scripts)}')
 
+        ControlSubtopico.verificar_completitud(plantilla, self.dataset)
 
-    def verificacion_dataset(self, a_verificar):
+
+    def verificacion_datasets(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.dataset, a_verificar.dataset.resources)
         result = dict()
         for x in csvs:
