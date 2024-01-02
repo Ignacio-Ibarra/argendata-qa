@@ -46,22 +46,6 @@ def strip_accents(input_str: str) -> str:
 
 # Verificaciones ======================================================================================================
 
-COLUMNAS_VERIFICACION_NIVEL_REGISTRO = ['orden_grafico','dataset_archivo','script_archivo',
-                                        'variable_nombre','url_path','fuente_nombre','institucion']
-
-def verificacion_nivel_registro(plantilla: DataFrame, columnas=COLUMNAS_VERIFICACION_NIVEL_REGISTRO) -> None | str:
-   """Verifica que no haya registros duplicados en la plantilla. Los registros son
-   observablemente iguales si tienen los mismos valores en todas las columnas especificadas."""
-   result = None
-   n_graficos = len(set(plantilla['orden_grafico']))
-
-   nivel_registro = plantilla.groupby(columnas).size()    
-   errores = np.unique(nivel_registro[nivel_registro > 1].index.get_level_values('orden_grafico').tolist())
-   if len(errores) > 0:
-      result = ", ".join(map(str, errores))
-      
-   return result
-
 
 def verificacion_datasets(plantilla: DataFrame, datasets: list, dtype_map=dtypes_conversion):
     """Verifica que los datasets declarados en la plantilla sean los mismos que los efectivos"""
@@ -105,19 +89,3 @@ def verificar_variables(declarados: DataFrame, filepath):
     filename = os.path.basename(filepath)
     df = pd.read_csv(filepath)
     return verificacion_variables(declarados, df, filename)
-
-
-def verificacion_completitud(plantilla: DataFrame, interseccion: set[str], not_target: list[str] = ['seccion_desc','nivel_agregacion', 'unidad_medida']) -> DataFrame:
-    """Busca filas incompletas"""
-    _plantilla = plantilla.copy()
-    _plantilla = _plantilla.loc[_plantilla.dataset_archivo.isin(interseccion), _plantilla.columns.difference(not_target)] 
-    _plantilla = _plantilla.groupby('dataset_archivo').agg(lambda x: x.isna().sum())
-    _plantilla = _plantilla.stack().reset_index()
-    _plantilla.columns = ['dataset_archivo','columna_plantilla','filas_incompletas']
-    _plantilla = _plantilla[_plantilla.filas_incompletas > 0]
-
-    return _plantilla
-
-
-def inspeccion_fuentes(plantilla, columnas=['fuente_nombre', 'institucion']):
-    return plantilla[columnas].dropna().drop_duplicates()

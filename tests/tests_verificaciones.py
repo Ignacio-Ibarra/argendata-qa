@@ -1,4 +1,5 @@
 from unittest import TestCase
+from argendata.qa import ControlSubtopico
 from argendata.qa.verificaciones import *
 
 class TestVerificacionNivelRegistro(TestCase):
@@ -13,7 +14,7 @@ class TestVerificacionNivelRegistro(TestCase):
             'fuente_nombre': ['m', 'n', 'o'],
             'institucion': ['p', 'q', 'r']
         })
-        self.assertIsNone(verificacion_nivel_registro(df))
+        self.assertIsNone(ControlSubtopico.verificar_nivel_registro(df))
 
     def test_un_duplicado(self):
         df = pd.DataFrame({
@@ -25,7 +26,7 @@ class TestVerificacionNivelRegistro(TestCase):
             'fuente_nombre': ['m', 'm', 'n'],
             'institucion': ['p', 'p', 'q']
         })
-        self.assertEqual(verificacion_nivel_registro(df), '1')
+        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1')
 
     def test_vacio(self):
         df = pd.DataFrame({
@@ -37,7 +38,7 @@ class TestVerificacionNivelRegistro(TestCase):
             'fuente_nombre': [],
             'institucion': []
         })
-        self.assertIsNone(verificacion_nivel_registro(df))
+        self.assertIsNone(ControlSubtopico.verificar_nivel_registro(df))
 
     def test_todos_duplicados(self):
         df = pd.DataFrame({
@@ -49,7 +50,7 @@ class TestVerificacionNivelRegistro(TestCase):
             'fuente_nombre': ['m', 'm', 'm'],
             'institucion': ['p', 'p', 'p']
         })
-        self.assertEqual(verificacion_nivel_registro(df), '1')
+        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1')
 
     def test_multiples_duplicados(self):
         df = pd.DataFrame({
@@ -61,7 +62,7 @@ class TestVerificacionNivelRegistro(TestCase):
             'fuente_nombre': ['fuente1', 'fuente2', 'fuente3', 'fuente1', 'fuente2', 'fuente3'],
             'institucion': ['inst1', 'inst2', 'inst3', 'inst1', 'inst2', 'inst3']
         })
-        self.assertEqual(verificacion_nivel_registro(df), '1, 2, 3')
+        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1, 2, 3')
 
 
 class TestVerificacionDatasets(TestCase):
@@ -168,7 +169,7 @@ class TestVerificacionCompletitud(TestCase):
 
     def test_vacio(self):
         empty_df = pd.DataFrame()
-        self.assertRaises(AttributeError, lambda: verificacion_completitud(empty_df, self.interseccion))
+        self.assertRaises(AttributeError, lambda: ControlSubtopico.verificar_completitud(empty_df, self.interseccion))
 
     def test_plantilla_vacia(self):
         plantilla = pd.DataFrame({
@@ -178,18 +179,18 @@ class TestVerificacionCompletitud(TestCase):
             'unidad_medida': [],
             'other_column': []
         })
-        result = verificacion_completitud(plantilla, self.interseccion)
+        result = ControlSubtopico.verificar_completitud(plantilla, self.interseccion)
         self.assertTrue(result.empty)
 
     def test_interseccion_vacia(self):
         interseccion = {'file4', 'file5'}
-        result = verificacion_completitud(self.plantilla, interseccion)
+        result = ControlSubtopico.verificar_completitud(self.plantilla, interseccion)
         self.assertTrue(result.empty)
 
     def test_ok(self):
         plantilla = self.plantilla.copy()
         plantilla.fillna('value', inplace=True)
-        result = verificacion_completitud(plantilla, self.interseccion)
+        result = ControlSubtopico.verificar_completitud(plantilla, self.interseccion)
         self.assertTrue(result.empty)
 
     def test_filas_incompletas(self):
@@ -198,5 +199,5 @@ class TestVerificacionCompletitud(TestCase):
             'columna_plantilla': ['other_column'],
             'filas_incompletas': [2]
         })
-        result = verificacion_completitud(self.plantilla, self.interseccion)
+        result = ControlSubtopico.verificar_completitud(self.plantilla, self.interseccion)
         self.assertTrue(result.equals(expected_output))
