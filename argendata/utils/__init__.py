@@ -1,3 +1,5 @@
+from .logger import LoggerFactory, inject_logger
+
 import json
 from datetime import datetime, timedelta
 from timeit import default_timer
