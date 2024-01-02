@@ -3,6 +3,8 @@ from argendata.utils.logger import LoggerFactory
 import inspect
 from inspect import Parameter
 from types import MappingProxyType
+from numpy import int64
+from pandas import DataFrame
 
 T = TypeVar('T')
 
@@ -133,30 +135,30 @@ class Verifica(Protocol):
 # Formato resultado final
 
 __resultado__ = {
-        'cant_datasets_decl': None,
-        'cant_datasets_efvos': None,
-        'cant_graf_errores': None,
-        'cant_graficos': None,
-        'cant_scripts_decl': None,
-        'cant_scripts_declarados_no_cargados': None,
-        'cant_scripts_efectivos_no_declarados': None,
-        'cant_scripts_efvos': None,
-        'cant_variables_no_cargadas': None,
-        'cant_variables_no_declaradas': None,
-        'cant_variables_verificadas': None,
-        'columnas_con_nulos': None,
-        'control_calidad': None,
-        'datasets_a_verificar': None,
-        'datasets_declarados_no_cargados': None,
-        'datasets_efectivos_no_declarados': None,
-        'encoding_delimiter_df': None,
-        'fecha_verificacion': None,
-        'graf_errores': None,
-        'insepccion_fuentes': None,
-        'scripts_declarados_no_cargados': None,
-        'scripts_efectivos_no_declarados': None,
-        'subtopico': None,
-        'variables_no_cargadas': None,
-        'variables_no_declaradas': None,
-        'variables_tipo_dato_verificar': None
+    'subtopico' : str,
+    'fecha_verificacion' : str,
+    'cant_graficos' : int,
+    'cant_graf_errores' : int,
+    'graf_errores' : float,
+    'cant_datasets_efvos' : int,
+    'cant_datasets_decl' : int,
+    'datasets_a_verificar' : list,
+    'datasets_declarados_no_cargados' : list,
+    'datasets_efectivos_no_declarados' : list,
+    'cant_variables_verificadas' : int64,
+    'cant_variables_no_cargadas' : int64,
+    'cant_variables_no_declaradas' : int64,
+    'variables_no_cargadas' : list,
+    'variables_no_declaradas' : list,
+    'cant_scripts_efvos' : int,
+    'cant_scripts_decl' : int,
+    'scripts_declarados_no_cargados' : list,
+    'cant_scripts_declarados_no_cargados' : int,
+    'scripts_efectivos_no_declarados' : list,
+    'cant_scripts_efectivos_no_declarados' : int,
+    'variables_tipo_dato_verificar' : DataFrame,
+    'columnas_con_nulos' : DataFrame,
+    'insepccion_fuentes' : DataFrame,
+    'encoding_delimiter_df' : DataFrame,
+    'control_calidad' : dict,
 }
