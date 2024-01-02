@@ -279,6 +279,24 @@ class GResource:
     #   todas las consolas. (ASCII compatible / UNICODE+ANSI compatible)
 
 
+    def fields_dict(self, fields: list[str] | Literal['all']) -> dict:
+        """
+        Devuelve un diccionario con los campos especificados.
+        :param fields: Lista de campos a devolver. Si es None, devuelve la id.
+        :return: Diccionario con los campos especificados.
+        """
+        if fields == 'all':
+            fields = self.__slots__
+
+        result = dict()
+
+        for field in fields:
+            if hasattr(self, field):
+                result[field] = getattr(self, field)
+
+        return result
+
+
 class GFolder(GResource):
     """Subclase de GResource, provee utilidades específicas para operar con carpetas."""
 
@@ -303,28 +321,32 @@ class GFolder(GResource):
 
     # TODO: Portar peek() y traverse_preorder() para mirar la carpeta normal y recursivamente (respectivamente).
 
-    def as_dict(self, recursive=False):
+    def fields_dict(self, fields: list[str] | Literal['all'] = None) -> dict:
+        result = super().fields_dict(fields)
+        if 'mimeType' in result:
+            result['mimeType'] = GResource.FOLDER_MIMETYPE
+        return result
+
+    def as_dict(self, recursive=False, fields: list['str'] | Literal['all'] = ['id']):
         resources = self.resources
         files = []
         folders = []
         for resource in resources:
             if isinstance(resource, GFolder):
                 if recursive:
-                    folders.append(resource.as_dict(True))
+                    folders.append(resource.as_dict(True, fields=fields))
                 else:
-                    folders.append({'title': resource.title, 'id': resource.id, 'mimeType': GResource.FOLDER_MIMETYPE})
+                    folders.append(resource.fields_dict(fields=fields))
             elif isinstance(resource, GFile):
-                files.append(resource.as_dict())
+                files.append(resource.as_dict(fields=fields))
 
-        return {
-            'title': self.title,
-            'id': self.id,
-            'mimeType': GResource.FOLDER_MIMETYPE,
-            'resources': {
-                'files': files,
-                'folders': folders,
-            }
-        }
+        result = self.fields_dict(fields)
+        result['resources'] = { 'files': files, 'folders': folders }
+
+        return result
+    
+    def show(self, recursive=False, fields: list['str'] | Literal['all'] = ['id'], by=lambda x: x['id']):
+        return traverse_pre_order(self.as_dict(recursive=recursive, fields=fields), show=by)
 
     def to_json(self, path='', recursive=False):
         if not path:
@@ -383,12 +405,8 @@ class GFile(GResource):
 
     __slots__ = ['title', 'id', 'mimeType']
 
-    def as_dict(self):
-        return {
-            'title': self.title,
-            'id': self.id,
-            'mimeType': self.mimeType
-        }
+    def as_dict(self, fields=['id']):
+        return self.fields_dict(fields=fields)
 
 
 # TODO: Terminar el FSTRee.
