@@ -8,6 +8,7 @@ from argendata.utils.files.mime import extensions
 from argendata.utils.gwrappers import GDrive
 from argendata.utils.logger import inject_logger
 from argendata.utils import keys_included, now, stopwatch, json_to_file, MethodMapping
+from argendata.utils import parse_time_arg, timeformat
 
 
 @inject_logger('gresources')
@@ -88,14 +89,17 @@ class GResource:
     @property
     def DEFAULT_FILENAME(self):
         """Devuelve el nombre de archivo (con extensión y fecha-hora actual) del recurso."""
-        return f'{self.clean_title}_{now.string}{self.extension}'
+        return f'{self.clean_title}_{timeformat(parse_time_arg(self.modifiedDate))}{self.extension}'
 
     def __init__(self, data: dict):
         for field, metadata in data.items():
             setattr(self, field, metadata)
 
     def __getattr__(self, item, *args, **kwargs):
-        return getattr(self, item, *args, **kwargs)
+        if item in dir(self):
+            return getattr(self, item, *args, **kwargs)
+        else:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
     @staticmethod
     def get_if_exists(parent_id: str, title: str, mimeType: str) -> tuple[bool, None | GoogleDriveFile]:
