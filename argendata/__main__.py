@@ -7,5 +7,5 @@ def main():
 
     qa.analyze('TRANEN')
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
