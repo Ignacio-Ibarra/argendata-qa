@@ -6,6 +6,11 @@ test/utils/files/charsets/testfiles_encoding/*
 
 # Para poder hacer pruebas localmente
 test*.ipynb
+argendata/reporter/prueba.py
+argendata/reporter/output.md
+argendata/reporter/.json
+argendata/reporter/reporter_viejo.py
+
 
 # Byte-compiled / optimized / DLL files
 *__pycache__/
