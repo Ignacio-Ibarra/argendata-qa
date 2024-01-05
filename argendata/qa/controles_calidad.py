@@ -46,6 +46,20 @@ def number_of_nulls(data: DataFrame, non_nullable):
 #         expected = expected * x
 #     return real <= expected
 
+@controles.register('duplicates')
+def check_duplicates(data: DataFrame, keys: list[str])->bool:
+    """Verifica si existe filas duplicadas, tomando en cuenta sólo las columnas claves
+
+    Args:
+        data (DataFrame): dataset analizado
+        keys (list[str]): lista de columnas sobre las cuales se analiza existencia 
+        de duplicados
+
+    Returns:
+        bool: True tiene duplicados; False no tiene. 
+    """
+    return data.duplicated(subset=keys).sum()>0
+
 PATRON_WRONG_COLNAME = re.compile(r'[^a-z0-9_]+')
 def check_wrong_colname(cadena): 
     # Definir una expresión regular que acepte solo letras y números
