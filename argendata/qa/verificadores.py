@@ -20,7 +20,7 @@ class ControlCSV:
         codecs = get_codecs(a_verificar)
         self.codec = 'utf-8' if len(codecs) <= 0 else codecs[0][0]
         return self.codec
-    
+
     def verificacion_delimiter(self, a_verificar):
         codec = self.codec
         with open(a_verificar, 'r', encoding=codec) as csvfile:
@@ -48,39 +48,51 @@ class ControlSubtopico:
             return self._interseccion
 
     def __init__(self, s: Subtopico):
+        plantilla = s.plantilla
+
+        _tipo_dato = plantilla.loc[:, 'tipo_dato']
+        _tipo_dato = _tipo_dato.str.lower().apply(strip_accents)
+        _tipo_dato = _tipo_dato.map(dtype_map).fillna("no completo")
+
+        plantilla.loc[:, 'tipo_dato'] = _tipo_dato
+
+        plantilla['variable_nombre'].apply(lambda x: x.strip())
+
         self.a_verificar = s
 
     @staticmethod
-    def verificar_nivel_registro(plantilla, 
-                                columnas = ['orden_grafico','dataset_archivo','script_archivo', 
-                                           'variable_nombre','url_path','fuente_nombre','institucion']):
+    def verificar_nivel_registro(plantilla,
+                                 columnas=['orden_grafico', 'dataset_archivo', 'script_archivo',
+                                           'variable_nombre', 'url_path', 'fuente_nombre', 'institucion']):
         """Verifica que no haya registros duplicados en la plantilla. Los registros son
         observablemente iguales si tienen los mismos valores en todas las columnas especificadas."""
 
         result = None
         n_graficos = len(set(plantilla['orden_grafico']))
 
-        nivel_registro = plantilla.groupby(columnas).size()    
+        nivel_registro = plantilla.groupby(columnas).size()
         errores = np.unique(nivel_registro[nivel_registro > 1].index.get_level_values('orden_grafico').tolist())
         if len(errores) > 0:
-           result = ", ".join(map(str, errores))
+            result = ", ".join(map(str, errores))
 
         return result
 
-    @staticmethod    
+    @staticmethod
     def inspeccion_fuentes(plantilla, columnas=['fuente_nombre', 'institucion']):
         return plantilla[columnas].dropna().drop_duplicates()
-    
+
     @staticmethod
-    def verificar_completitud(plantilla: DataFrame, 
-                              datasets: set[str], 
-                              not_target: list[str] = ['seccion_desc','nivel_agregacion', 'unidad_medida']) -> DataFrame:
+    def verificar_completitud(plantilla: DataFrame,
+                              datasets: set[str],
+                              not_target: list[str] = ['seccion_desc', 'nivel_agregacion',
+                                                       'unidad_medida']) -> DataFrame:
         """Busca filas incompletas"""
         _plantilla = plantilla.copy()
-        _plantilla = _plantilla.loc[_plantilla.dataset_archivo.isin(datasets), _plantilla.columns.difference(not_target)] 
+        _plantilla = _plantilla.loc[
+            _plantilla.dataset_archivo.isin(datasets), _plantilla.columns.difference(not_target)]
         _plantilla = _plantilla.groupby('dataset_archivo').agg(lambda x: x.isna().sum())
         _plantilla = _plantilla.stack().reset_index()
-        _plantilla.columns = ['dataset_archivo','columna_plantilla','filas_incompletas']
+        _plantilla.columns = ['dataset_archivo', 'columna_plantilla', 'filas_incompletas']
         _plantilla = _plantilla[_plantilla.filas_incompletas > 0]
 
         return _plantilla
@@ -94,18 +106,8 @@ class ControlSubtopico:
     def verificacion_sistema_de_archivos(self, a_verificar: Subtopico):
         plantilla = a_verificar.plantilla
 
-        # FIXME: Esto está adaptado así nomás y CREO que no está mutando correctamente
-        # la plantilla con los tipos de datos nuevos. Revisar.
-
-        columnas = ['dataset_archivo','variable_nombre','tipo_dato','primary_key','nullable']
+        columnas = ['dataset_archivo', 'variable_nombre', 'tipo_dato', 'primary_key', 'nullable']
         datasets_declarados_df: DataFrame = plantilla[columnas].drop_duplicates()
-
-        _tipo_dato = datasets_declarados_df.loc[:, 'tipo_dato']
-        _tipo_dato = _tipo_dato.str.lower().apply(strip_accents)
-        _tipo_dato = _tipo_dato.map(dtype_map).fillna("no completo")
-
-        datasets_declarados_df.loc[:, 'tipo_dato'] = _tipo_dato
-
 
         datasets = ControlSubtopico.ConteoArchivos()
         datasets.declarados = set(plantilla['dataset_archivo'])
@@ -131,30 +133,48 @@ class ControlSubtopico:
 
         completitud = ControlSubtopico.verificar_completitud(plantilla, self.datasets)
         self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
+        return completitud.empty
 
-    
+
+    @staticmethod
+    def _verificar_variables():
+
     @staticmethod
     def verificar_variables(declarados: DataFrame, df: DataFrame, filename: str):
-        dtypes = df.dtypes.apply(str).reset_index().to_records(index=False).tolist()
+        dtypes: list[tuple[str,str]] = (df.dtypes.apply(str)
+                                                 .reset_index()
+                                                 .to_records(index=False)
+                                                 .tolist())
 
         slice_dataset = declarados[declarados.dataset_archivo == filename]
-        variables = slice_dataset[['variable_nombre', 'tipo_dato']].to_records(index=False).tolist()
-
+        variables: list[tuple[str,str]] = (slice_dataset[['variable_nombre', 'tipo_dato']].drop_duplicates()
+                                                                                          .to_records(index=False)
+                                                                                          .tolist())
+        dtypes: set[tuple[str,str]] = set(dtypes)
+        variables: set[tuple[str,str]] = set(variables)
         return dtypes == variables
 
     def verificacion_datasets(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)
         result = dict()
         for x in csvs:
+            partial_result = dict()
+
             path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
             resultados_csv = ControlCSV(x.title, path).verificar_todo()
+
             encoding = resultados_csv['verificacion_encoding']
             delimiter = resultados_csv['verificacion_delimiter']
-            df = read_csv(path, delimiter=delimiter, encoding=encoding)
+            partial_result['detected_encoding'] = encoding
+            partial_result['delimiter'] = delimiter
 
-            # FIXME: Esto da falso porque no se están mutando los dtypes de la plantilla.
+            df = read_csv(path, delimiter=delimiter, encoding=encoding)
+            df.columns = df.columns.map(lambda x: x.strip())
+
             verif_variables = ControlSubtopico.verificar_variables(a_verificar.plantilla, df, x.title)
+            partial_result['control_variables'] = verif_variables
+
             self.log.debug(f'Verificacion variables {x.title}: {verif_variables}')
-            
+            result[x.title] = partial_result
 
         return result
