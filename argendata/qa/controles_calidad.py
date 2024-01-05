@@ -35,15 +35,15 @@ def number_of_nulls(data: DataFrame):
     ...
     return True
 
-@controles.register('cardinality')
-def check_cardinality(data: DataFrame, keys: list[str]):
-    # all(data[keys].apply(lambda x: x.nunique() == len(data))) (?)
-    real = len(data)
-    expected = 1
-    for k in keys: 
-        x : int = data[k].nunique()
-        expected = expected * x
-    return real <= expected
+# @controles.register('cardinality')
+# def check_cardinality(data: DataFrame, keys: list[str]):
+#     # all(data[keys].apply(lambda x: x.nunique() == len(data))) (?)
+#     real = len(data)
+#     expected = 1
+#     for k in keys: 
+#         x : int = data[k].nunique()
+#         expected = expected * x
+#     return real <= expected
 
 PATRON_WRONG_COLNAME = re.compile(r'[^a-z0-9_]+')
 def check_wrong_colname(cadena): 
