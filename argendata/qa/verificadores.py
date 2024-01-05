@@ -138,6 +138,7 @@ class ControlSubtopico:
 
     @staticmethod
     def _verificar_variables():
+        ...
 
     @staticmethod
     def verificar_variables(declarados: DataFrame, df: DataFrame, filename: str):
@@ -146,7 +147,7 @@ class ControlSubtopico:
                                                  .to_records(index=False)
                                                  .tolist())
 
-        slice_dataset = declarados[declarados.dataset_archivo == filename]
+        slice_dataset = declarados[declarados.dataset   _archivo == filename]
         variables: list[tuple[str,str]] = (slice_dataset[['variable_nombre', 'tipo_dato']].drop_duplicates()
                                                                                           .to_records(index=False)
                                                                                           .tolist())
