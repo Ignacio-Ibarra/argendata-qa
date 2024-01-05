@@ -1,7 +1,7 @@
+import os.path
 import json
 from logging import Logger
 from typing import Literal
-
 from pydrive.files import GoogleDriveFile
 from argendata.utils.files import file
 from argendata.utils.files.mime import extensions
@@ -230,7 +230,7 @@ class GResource:
         GResource.log.debug(f'Successfully instantiated locally {str(result)}.')
         return result
 
-    def download(self, path='') -> str:  # typing.Self existe a partir de Python 3.11
+    def download(self, path='', force=False) -> str:  # typing.Self existe a partir de Python 3.11
         """
         Descarga el recurso a un archivo local.
         :param path: Ruta completa al archivo local. Por ejemplo '/path/to/file.csv'.
@@ -244,6 +244,9 @@ class GResource:
         path = file(path)
 
         try:
+            if not force and os.path.exists(path):
+                GResource.log.debug(f"Skipping {str(self)}.")
+                return path
             GDrive.instance.CreateFile({'id': self.id}).GetContentFile(path)
         except Exception as e:
             raise RuntimeError(f"There was an error downloading {str(self)}.\nHere are the details: {e}.")
