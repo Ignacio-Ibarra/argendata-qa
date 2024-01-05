@@ -9,3 +9,4 @@ logger = LoggerFactory.getLogger("controles_calidad")
 def analyze(nombre_subtopico: str):
     subtopico = Subtopico.from_name(nombre_subtopico)
     verificaciones = subtopico.verificar(ControlSubtopico)
+    return verificaciones
