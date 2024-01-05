@@ -30,10 +30,11 @@ def is_tidy(data: DataFrame, keys: list[str], threshold: float = 0.5):
     result = 1 - ratio
     return result <= threshold
 
+
 @controles.register
 def number_of_nulls(data: DataFrame):
-    ...
-    return True
+    nulls_per_col = {colname : [column.isna().sum()] for colname, column in data.items()}
+    return nulls_per_col
 
 # @controles.register('cardinality')
 # def check_cardinality(data: DataFrame, keys: list[str]):
