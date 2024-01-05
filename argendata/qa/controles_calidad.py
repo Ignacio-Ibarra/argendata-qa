@@ -31,10 +31,10 @@ def is_tidy(data: DataFrame, keys: list[str], threshold: float = 0.5):
     return result <= threshold
 
 
-@controles.register
-def number_of_nulls(data: DataFrame):
-    nulls_per_col = {colname : [column.isna().sum()] for colname, column in data.items()}
-    return nulls_per_col
+@controles.register('nullity_check')
+def number_of_nulls(data: DataFrame, non_nullable):
+    nulls_per_col = {colname : column.isna().sum() for colname, column in data.items()}
+    return not any([nulls_per_col.get(x) > 0 for x in non_nullable])
 
 # @controles.register('cardinality')
 # def check_cardinality(data: DataFrame, keys: list[str]):
@@ -55,16 +55,16 @@ def check_wrong_colname(cadena):
     return coincidencias is not None
 
 @controles.register('header')
-def wrong_colnames(col_list: list[str]):
+def wrong_colnames(data: DataFrame, col_list: list[str]):
     # all(map(check_wrong_colname, col_list)) (?)
-    return [col for col in col_list if check_wrong_colname(col)]
+    return len([col for col in col_list if check_wrong_colname(col)]) == 0
 
 def tiene_caracteres_raros(cadena):
     # Definir una expresión regular que acepte solo letras y números
     patron = re.compile(r"[^a-zA-Z0-9\s,.áéíóúüñôçÁÉÍÓÚÜÑÇ_' \-\(\)]+")
     # Buscar si hay coincidencias en la cadena
     try:
-        if isnull(cadena)==False:
+        if isnull(cadena) == False:
             coincidencias = patron.search(cadena)
             return coincidencias is not None
         else:
