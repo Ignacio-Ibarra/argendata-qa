@@ -7,7 +7,7 @@ from argendata.utils import getattrc, strip_accents, dtypes_conversion as dtype_
 from argendata.utils.files.charsets import get_codecs
 from .subtopico import Subtopico
 from .verificador.abstracto import Verifica
-
+from .controles_calidad import make_controls
 
 @Verifica["Archivo"]
 class ControlCSV:
@@ -67,7 +67,7 @@ class ControlSubtopico:
         """Verifica que no haya registros duplicados en la plantilla. Los registros son
         observablemente iguales si tienen los mismos valores en todas las columnas especificadas."""
 
-        result = None
+        result = 'OK'
         n_graficos = len(set(plantilla['orden_grafico']))
 
         nivel_registro = plantilla.groupby(columnas).size()
@@ -101,7 +101,7 @@ class ControlSubtopico:
         return ControlSubtopico.verificar_nivel_registro(a_verificar.plantilla)
 
     def verificacion_fuentes(self, a_verificar: Subtopico):
-        return ControlSubtopico.inspeccion_fuentes(a_verificar.plantilla)
+        return ControlSubtopico.inspeccion_fuentes(a_verificar.plantilla).to_records(index=False).tolist()
 
     def verificacion_sistema_de_archivos(self, a_verificar: Subtopico):
         plantilla = a_verificar.plantilla
@@ -147,7 +147,7 @@ class ControlSubtopico:
                                                  .to_records(index=False)
                                                  .tolist())
 
-        slice_dataset = declarados[declarados.dataset   _archivo == filename]
+        slice_dataset = declarados[declarados.dataset_archivo == filename]
         variables: list[tuple[str,str]] = (slice_dataset[['variable_nombre', 'tipo_dato']].drop_duplicates()
                                                                                           .to_records(index=False)
                                                                                           .tolist())
@@ -175,7 +175,21 @@ class ControlSubtopico:
             verif_variables = ControlSubtopico.verificar_variables(a_verificar.plantilla, df, x.title)
             partial_result['control_variables'] = verif_variables
 
-            self.log.debug(f'Verificacion variables {x.title}: {verif_variables}')
+            # TODO: Pasar plantilla sliceada para el archivo, pues se repite mucho 
+
+            keys = a_verificar.plantilla.loc[(a_verificar.plantilla.dataset_archivo == x.title) 
+                                      & (a_verificar.plantilla.primary_key == True), 'variable_nombre'].str.strip().to_list()
+            
+            not_nullable = a_verificar.plantilla.loc[(a_verificar.plantilla.dataset_archivo == x.title) 
+                                              & (a_verificar.plantilla.nullable == False), 'variable_nombre'].str.strip().to_list()
+            ensure_quality = make_controls({
+                'tidy_data': keys,
+                'nullity_check': not_nullable,
+                'header': (df.columns, ),
+                'special_characters': None
+            })
+
+            partial_result['quality_checks'] = ensure_quality(df)
             result[x.title] = partial_result
 
         return result
