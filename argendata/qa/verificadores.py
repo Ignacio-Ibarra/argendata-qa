@@ -184,6 +184,7 @@ class ControlSubtopico:
                                               & (a_verificar.plantilla.nullable == False), 'variable_nombre'].str.strip().to_list()
             ensure_quality = make_controls({
                 'tidy_data': keys,
+                'duplicates': keys, # agrego este chequeo que antes no estaba
                 'nullity_check': not_nullable,
                 'header': (df.columns, ),
                 'special_characters': None
