@@ -123,7 +123,7 @@ def make_controls(d: dict[str, object|tuple]):
     def curry_object(data: DataFrame):
         result = dict()
         for k,v in d.items():
-            params = (data, *v) if isinstance(v, tuple) and len(v) > 0 else (data, ) if not v else (data, v)
+            params = (data, *v) if isinstance(v, tuple) and len(v) > 0 else (data, ) if (not v) or (v == Ellipsis) else (data, v)
             result[k] = controles[k](*params)
         return result
     return curry_object

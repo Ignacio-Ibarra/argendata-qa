@@ -165,7 +165,7 @@ class ControlSubtopico:
                 'duplicates': keys,
                 'nullity_check': not_nullable,
                 'header': (df.columns, ),
-                'special_characters': None
+                'special_characters': ...
             })
 
             partial_result['quality_checks'] = ensure_quality(df)
