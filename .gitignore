@@ -4,6 +4,7 @@ temp/
 tmp/
 test/utils/files/charsets/testfiles_encoding/*
 .idea/*
+output/*
 
 # Para poder hacer pruebas localmente
 test*.ipynb
