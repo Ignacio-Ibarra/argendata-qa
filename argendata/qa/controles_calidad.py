@@ -58,10 +58,11 @@ def check_duplicates(data: DataFrame, keys: list[str])->bool:
     Returns:
         bool: True tiene duplicados; False no tiene. 
     """
-    return data.duplicated(subset=keys).sum()>0
+    return bool(data.duplicated(subset=keys).sum() > 0)
 
 PATRON_WRONG_COLNAME = re.compile(r'[^a-z0-9_]+')
 def check_wrong_colname(cadena): 
+    """Devuelve True si la cadena es inválida, y False si no."""
     # Definir una expresión regular que acepte solo letras y números
     # Buscar si hay coincidencias en la cadena
     coincidencias = PATRON_WRONG_COLNAME.search(cadena)
@@ -70,10 +71,14 @@ def check_wrong_colname(cadena):
 
 @controles.register('header')
 def wrong_colnames(data: DataFrame, col_list: list[str]):
-    # all(map(check_wrong_colname, col_list)) (?)
-    return len([col for col in col_list if check_wrong_colname(col)]) == 0
+    """Devuelve una tupla que contiene:
+        - True si ninguna columna tiene caracteres raros, False sino.
+        - Una lista de las columnas que tienen caracteres raros. (Si no hay, devuelve una lista vacía)"""
+    wrong_cols = list(filter(check_wrong_colname, col_list))
+    return len(wrong_cols) == 0, wrong_cols
 
 def tiene_caracteres_raros(cadena):
+    """Devuelve True si la cadena es tiene caracteres raros, y False si no."""
     # Definir una expresión regular que acepte solo letras y números
     patron = re.compile(r"[^a-zA-Z0-9\s,.áéíóúüñôçÁÉÍÓÚÜÑÇ_' \-\(\)]+")
     # Buscar si hay coincidencias en la cadena
@@ -84,27 +89,45 @@ def tiene_caracteres_raros(cadena):
         else:
             return False
     except Exception as exc:
-        print(f"{type(exc)}: Error with string in row")
+        print(f"{exc}")
 
 def _check_special_characters(serie:Series, count_header_row=True):
     n = 2 if count_header_row else 0
         
     row_status = serie.apply(tiene_caracteres_raros)
 
-    if row_status.sum() <= 0:
-        return nan
+    if row_status.sum() <= 0: # any
+        return []
     
     idx = row_status[row_status == True].index.tolist()
 
-    return ", ".join([str(x+n) for x in idx])
+    #return [(x+n, serie.iloc[x+n]) for x in idx]
+
+    result = dict()
+    for v,k in serie[row_status].items():
+        result.setdefault(k, []).append(v)
+
+    return result
 
 @controles.register('special_characters')
 def special_characters(data: DataFrame):
-    special_chars = data.select_dtypes(include='object').apply(_check_special_characters, axis=0).dropna()
-    return len(special_chars) == 0
+    is_ok = True
+    result = dict()
+    for col in [colname for colname, dtype in data.dtypes.items() if dtype == object]:
+        column_analysis = _check_special_characters(data[col])
+        if column_analysis:
+            result[col] = column_analysis
+            is_ok = False
+
+    return is_ok, result
 
 @controles.register('variables')
 def verificar_variables(df: DataFrame, declarados: DataFrame):
+    """Devuelve una tupla que contiene:
+        - True si las variables declaradas en la plantilla son las mismas que las del dataset, False sino.
+        - Una lista de las variables detectadas en el DataFrame.
+        - La diferencia simétrica entre las variables declaradas y las detectadas.
+    """
     dtypes: list[tuple[str,str]] = (df.dtypes.apply(str)
                                                 .reset_index()
                                                 .to_records(index=False)
@@ -115,7 +138,7 @@ def verificar_variables(df: DataFrame, declarados: DataFrame):
                                                                                         .tolist())
     dtypes: set[tuple[str,str]] = set(dtypes)
     variables: set[tuple[str,str]] = set(variables)
-    return dtypes == variables
+    return dtypes == variables, list(dtypes), list(dtypes.symmetric_difference(variables))
 
 def make_controls(d: dict[str, object|tuple]):
     """Factory method para crear controles de calidad"""
