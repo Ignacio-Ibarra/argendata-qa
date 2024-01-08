@@ -6,14 +6,67 @@ from pandas import DataFrame
 from jinja2 import Environment, FileSystemLoader, Template
 from typing import Literal, Callable
 
+# Acá está la clase de Template. 
+#============================================================
+
+class MDTemplate:
+    
+    template_path : str
+    data : dict
+
+    def __init__(self, template_path:str, data:dict):
+        """Toma un path y datos y genera un template
+
+        Args:
+            template_path (str): _description_
+            data (dict): _description_
+        """
+
+        self.template : Template =  JinjaEnv(template_path=template_path).template
+        self.data = data
+        self.output_path = ...
+        
+    def render(self)->str|None:
+        """
+        Toma un Template de Jinja y data en un dict y devuelve una string
+        """ 
+        try: 
+            # Renderizar el template con los datos del usuario
+            string_rendered = self.template.render(data=self.data)
+            
+            return string_rendered
+        
+        except Exception as e:
+            print(e)
+            return None
+        
+def template_factory(template_path:str)->Callable[[dict], str]:
+    """Función currificada que permite pasar un path y data
+
+    Args:
+        template_path (str): path en el cual se aloja el tempalte utilizado
+
+    Returns:
+        Callable[[dict], str]: diccionario que contiene datos necesarios para incrustar en el template. 
+    """
+    return lambda data: MDTemplate(template_path=template_path, data=data).render() 
+
+
+
+# Acá esta la clase de resultados
+
+
 Integer = int|np.int64
 
 # Esto falta corregir. 
 # Hay que tener un dict que no haya que procesar datos para incrustarlos en el markdown. 
 # Así como está no sirve. 
-expected_dtypes= {
+expected_gutter = {
     'subtopico' : str,                                  # Corregido - datos a incrustar en tamplate GUTTER
-    'fecha_verificacion' : str,                         # Corregido - datos a incrustar en tamplate GUTTER
+    'fecha_verificacion' : str                          # Corregido - datos a incrustar en tamplate GUTTER
+    }                         
+
+expected_resumen = {
     "string_errores_graficos" : str,                    # Corregido - datos a incrustar en tamplate RESUMEN
     "tabla_resumen" : DataFrame,                        # Corregido - datos a incrustar en tamplate RESUMEN
     "tabla_datasets_no_cargados" : DataFrame,           # Corregido - datos a incrustar en tamplate RESUMEN
@@ -21,25 +74,22 @@ expected_dtypes= {
     "tabla_scripts_no_declarados" : DataFrame,          # Corregido - datos a incrustar en tamplate RESUMEN
     "tabla_scripts_no_cargados" : DataFrame,            # Corregido - datos a incrustar en tamplate RESUMEN
     "tabla_variables_no_declaradas" : DataFrame,        # Corregido - datos a incrustar en tamplate RESUMEN
-    "tabla_variables_no_cargadas" : DataFrame,          # Corregido - datos a incrustar en tamplate RESUMEN
-    "tabla_inspeccion_fuentes" : DataFrame,             # Corregido - datos a incrustar en tamplate INSPECCION FUENTES
-    'tabla_metadatos_incompletos' : DataFrame,          # Corregido - datos a incrustar en tamplate METADATOS INCOMPLETOS
-    'cant_variables_no_cargadas' : Integer,             # falta corregir
-    'cant_variables_no_declaradas' : Integer,           # falta corregir
-    'variables_no_cargadas' : list,                     # falta corregir
-    'variables_no_declaradas' : list,                   # falta corregir
-    'cant_scripts_efvos' : Integer,                     # falta corregir
-    'cant_scripts_decl' : Integer,                      # falta corregir
-    'scripts_declarados_no_cargados' : list,            # falta corregir
-    'cant_scripts_declarados_no_cargados' : Integer,    # falta corregir
-    'scripts_efectivos_no_declarados' : list,           # falta corregir
-    'cant_scripts_efectivos_no_declarados' : Integer,   # falta corregir
-    'variables_tipo_dato_verificar' : dict,             # falta corregir
-    'columnas_con_nulos' : dict,                        # falta corregir
-    'insepccion_fuentes' : dict,                        # falta corregir
-    'encoding_delimiter_df' : dict,                     # falta corregir
-    'control_calidad' : dict                            # falta corregir 
+    "tabla_variables_no_cargadas" : DataFrame          # Corregido - datos a incrustar en tamplate RESUMEN
+    }
+
+expected_insepeccion_fuentes = {
+    "tabla_inspeccion_fuentes" : DataFrame             # Corregido - datos a incrustar en tamplate INSPECCION FUENTES
+    }
+
+expected_metadatos_incompletos = {
+    'tabla_metadatos_incompletos' : DataFrame|None          # Corregido - datos a incrustar en tamplate METADATOS INCOMPLETOS
+    }
+
+
+expected_desglose_dataset = {
+    'dataset_verificados' : dict|None 
 }
+
 
 def unexpected_types(key:str, expected_typename: str, got_typename: str) -> str:
     return f"Tipo de dato incorrecto para la clave '{key}'. \nSe esperaba '{expected_typename}', pero se encontró '{got_typename}'."
@@ -121,10 +171,10 @@ separator_dict = {
 
     
 class Results:
-    results_to_report : dict|str
+    template_results : dict|str
     transform_list : list[str]
 
-    def __init__(self, results_to_report : dict|str): 
+    def __init__(self, template_results : dict): 
         """Esta función obtiene un diccionario o un path a un JSON que contenga
         los datos listos para incrustar en un tamplate
 
@@ -133,7 +183,7 @@ class Results:
         """
         
         try: 
-            results_dict = load_results(results_to_report=results_to_report)
+            results_dict = load_results(results_to_report=template_results)
             self.results_dict = get_result_dict(true_dict=results_dict, expected_dtypes=expected_dtypes)
             
             print("Result dict already loaded!!!")
@@ -181,38 +231,7 @@ class JinjaEnv:
         self.template = self.env.get_template(template_path)
 
 
-class MDTemplate:
-    
-    template_path : str,
-    data : dict
 
-    def __init__(self, template_path:str, data:dict):
-        """Toma un path y datos y genera un template
-
-        Args:
-            template_path (str): _description_
-            data (dict): _description_
-        """
-
-        self.template : Template =  JinjaEnv(template_path=template_path).template
-        self.data = data
-        
-    def render(self)->str|None:
-        """
-        Toma un Template de Jinja y data en un dict y devuelve una string
-        """ 
-        try: 
-            # Renderizar el template con los datos del usuario
-            string_rendered = self.template.render(data=self.data)
-            return string_rendered
-        
-        except Exception as e:
-            print(e)
-            return None
-
-
-def template_factory(template_path:str)->Callable[[dict], str]:
-    return lambda data: MDTemplate(template_path=template_path, data=data).render() 
 
     
     
