@@ -103,6 +103,21 @@ def special_characters(data: DataFrame):
     special_chars = data.select_dtypes(include='object').apply(_check_special_characters, axis=0).dropna()
     return len(special_chars) == 0
 
+@controles.register('variables')
+def verificar_variables(df: DataFrame, declarados: DataFrame, filename: str):
+    dtypes: list[tuple[str,str]] = (df.dtypes.apply(str)
+                                                .reset_index()
+                                                .to_records(index=False)
+                                                .tolist())
+
+    slice_dataset = declarados[declarados.dataset_archivo == filename]
+    variables: list[tuple[str,str]] = (slice_dataset[['variable_nombre', 'tipo_dato']].drop_duplicates()
+                                                                                        .to_records(index=False)
+                                                                                        .tolist())
+    dtypes: set[tuple[str,str]] = set(dtypes)
+    variables: set[tuple[str,str]] = set(variables)
+    return dtypes == variables
+
 def make_controls(d: dict[str, object|tuple]):
     """Factory method para crear controles de calidad"""
     def curry_object(data: DataFrame):

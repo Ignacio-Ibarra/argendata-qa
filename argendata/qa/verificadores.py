@@ -135,26 +135,6 @@ class ControlSubtopico:
         self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
         return completitud.empty
 
-
-    @staticmethod
-    def _verificar_variables():
-        ...
-
-    @staticmethod
-    def verificar_variables(declarados: DataFrame, df: DataFrame, filename: str):
-        dtypes: list[tuple[str,str]] = (df.dtypes.apply(str)
-                                                 .reset_index()
-                                                 .to_records(index=False)
-                                                 .tolist())
-
-        slice_dataset = declarados[declarados.dataset_archivo == filename]
-        variables: list[tuple[str,str]] = (slice_dataset[['variable_nombre', 'tipo_dato']].drop_duplicates()
-                                                                                          .to_records(index=False)
-                                                                                          .tolist())
-        dtypes: set[tuple[str,str]] = set(dtypes)
-        variables: set[tuple[str,str]] = set(variables)
-        return dtypes == variables
-
     def verificacion_datasets(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)
         result = dict()
@@ -173,9 +153,6 @@ class ControlSubtopico:
             df = read_csv(path, delimiter=delimiter, encoding=encoding)
             df.columns = df.columns.map(lambda x: x.strip())
 
-            verif_variables = ControlSubtopico.verificar_variables(slice_plantilla, df, x.title)
-            partial_result['control_variables'] = verif_variables
-
             keys = slice_plantilla.loc[slice_plantilla.primary_key == True, 'variable_nombre']
             keys = keys.str.strip().to_list()
 
@@ -184,7 +161,8 @@ class ControlSubtopico:
 
             ensure_quality = make_controls({
                 'tidy_data': keys,
-                'duplicates': keys, # agrego este chequeo que antes no estaba
+                'variables': (slice_plantilla, x.title),
+                'duplicates': keys,
                 'nullity_check': not_nullable,
                 'header': (df.columns, ),
                 'special_characters': None
