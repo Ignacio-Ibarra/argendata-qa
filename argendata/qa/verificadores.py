@@ -135,31 +135,12 @@ class ControlSubtopico:
         self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
         return completitud.empty
 
-
-    @staticmethod
-    def _verificar_variables():
-        ...
-
-    @staticmethod
-    def verificar_variables(declarados: DataFrame, df: DataFrame, filename: str):
-        dtypes: list[tuple[str,str]] = (df.dtypes.apply(str)
-                                                 .reset_index()
-                                                 .to_records(index=False)
-                                                 .tolist())
-
-        slice_dataset = declarados[declarados.dataset_archivo == filename]
-        variables: list[tuple[str,str]] = (slice_dataset[['variable_nombre', 'tipo_dato']].drop_duplicates()
-                                                                                          .to_records(index=False)
-                                                                                          .tolist())
-        dtypes: set[tuple[str,str]] = set(dtypes)
-        variables: set[tuple[str,str]] = set(variables)
-        return dtypes == variables
-
     def verificacion_datasets(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)
         result = dict()
         for x in csvs:
             partial_result = dict()
+            slice_plantilla = a_verificar.plantilla.loc[a_verificar.plantilla.dataset_archivo == x.title]
 
             path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
             resultados_csv = ControlCSV(x.title, path).verificar_todo()
@@ -172,22 +153,19 @@ class ControlSubtopico:
             df = read_csv(path, delimiter=delimiter, encoding=encoding)
             df.columns = df.columns.map(lambda x: x.strip())
 
-            verif_variables = ControlSubtopico.verificar_variables(a_verificar.plantilla, df, x.title)
-            partial_result['control_variables'] = verif_variables
+            keys = slice_plantilla.loc[slice_plantilla.primary_key == True, 'variable_nombre']
+            keys = keys.str.strip().to_list()
 
-            # TODO: Pasar plantilla sliceada para el archivo, pues se repite mucho 
+            not_nullable = slice_plantilla.loc[slice_plantilla.nullable == False, 'variable_nombre']
+            not_nullable = not_nullable.str.strip().to_list()
 
-            keys = a_verificar.plantilla.loc[(a_verificar.plantilla.dataset_archivo == x.title) 
-                                      & (a_verificar.plantilla.primary_key == True), 'variable_nombre'].str.strip().to_list()
-            
-            not_nullable = a_verificar.plantilla.loc[(a_verificar.plantilla.dataset_archivo == x.title) 
-                                              & (a_verificar.plantilla.nullable == False), 'variable_nombre'].str.strip().to_list()
             ensure_quality = make_controls({
                 'tidy_data': keys,
-                'duplicates': keys, # agrego este chequeo que antes no estaba
+                'variables': (slice_plantilla, x.title),
+                'duplicates': keys,
                 'nullity_check': not_nullable,
                 'header': (df.columns, ),
-                'special_characters': None
+                'special_characters': ...
             })
 
             partial_result['quality_checks'] = ensure_quality(df)
