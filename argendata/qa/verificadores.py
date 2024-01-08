@@ -141,6 +141,7 @@ class ControlSubtopico:
         for x in csvs:
             partial_result = dict()
             slice_plantilla = a_verificar.plantilla.loc[a_verificar.plantilla.dataset_archivo == x.title]
+            variables = slice_plantilla.loc[:, 'variable_nombre']
 
             path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
             resultados_csv = ControlCSV(x.title, path).verificar_todo()
@@ -153,15 +154,15 @@ class ControlSubtopico:
             df = read_csv(path, delimiter=delimiter, encoding=encoding)
             df.columns = df.columns.map(lambda x: x.strip())
 
-            keys = slice_plantilla.loc[slice_plantilla.primary_key == True, 'variable_nombre']
+            keys = variables.loc[slice_plantilla.primary_key == True]
             keys = keys.str.strip().to_list()
 
-            not_nullable = slice_plantilla.loc[slice_plantilla.nullable == False, 'variable_nombre']
+            not_nullable = variables.loc[slice_plantilla.nullable == False]
             not_nullable = not_nullable.str.strip().to_list()
 
             ensure_quality = make_controls({
                 'tidy_data': keys,
-                'variables': (slice_plantilla, x.title),
+                'variables': (slice_plantilla, ),
                 'duplicates': keys,
                 'nullity_check': not_nullable,
                 'header': (df.columns, ),

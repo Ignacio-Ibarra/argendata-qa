@@ -104,14 +104,13 @@ def special_characters(data: DataFrame):
     return len(special_chars) == 0
 
 @controles.register('variables')
-def verificar_variables(df: DataFrame, declarados: DataFrame, filename: str):
+def verificar_variables(df: DataFrame, declarados: DataFrame):
     dtypes: list[tuple[str,str]] = (df.dtypes.apply(str)
                                                 .reset_index()
                                                 .to_records(index=False)
                                                 .tolist())
 
-    slice_dataset = declarados[declarados.dataset_archivo == filename]
-    variables: list[tuple[str,str]] = (slice_dataset[['variable_nombre', 'tipo_dato']].drop_duplicates()
+    variables: list[tuple[str,str]] = (declarados[['variable_nombre', 'tipo_dato']].drop_duplicates()
                                                                                         .to_records(index=False)
                                                                                         .tolist())
     dtypes: set[tuple[str,str]] = set(dtypes)
