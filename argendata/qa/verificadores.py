@@ -160,6 +160,7 @@ class ControlSubtopico:
         result = dict()
         for x in csvs:
             partial_result = dict()
+            slice_plantilla = a_verificar.plantilla.loc[a_verificar.plantilla.dataset_archivo == x.title]
 
             path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
             resultados_csv = ControlCSV(x.title, path).verificar_todo()
@@ -172,16 +173,15 @@ class ControlSubtopico:
             df = read_csv(path, delimiter=delimiter, encoding=encoding)
             df.columns = df.columns.map(lambda x: x.strip())
 
-            verif_variables = ControlSubtopico.verificar_variables(a_verificar.plantilla, df, x.title)
+            verif_variables = ControlSubtopico.verificar_variables(slice_plantilla, df, x.title)
             partial_result['control_variables'] = verif_variables
 
-            # TODO: Pasar plantilla sliceada para el archivo, pues se repite mucho 
+            keys = slice_plantilla.loc[slice_plantilla.primary_key == True, 'variable_nombre']
+            keys = keys.str.strip().to_list()
 
-            keys = a_verificar.plantilla.loc[(a_verificar.plantilla.dataset_archivo == x.title) 
-                                      & (a_verificar.plantilla.primary_key == True), 'variable_nombre'].str.strip().to_list()
-            
-            not_nullable = a_verificar.plantilla.loc[(a_verificar.plantilla.dataset_archivo == x.title) 
-                                              & (a_verificar.plantilla.nullable == False), 'variable_nombre'].str.strip().to_list()
+            not_nullable = slice_plantilla.loc[slice_plantilla.nullable == False, 'variable_nombre']
+            not_nullable = not_nullable.str.strip().to_list()
+
             ensure_quality = make_controls({
                 'tidy_data': keys,
                 'duplicates': keys, # agrego este chequeo que antes no estaba
