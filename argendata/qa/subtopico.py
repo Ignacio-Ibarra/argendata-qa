@@ -22,7 +22,7 @@ class Subtopico:
     def detectar_entregas(self) -> list[GResource]:
         return self.carpeta.find_by_recursion('datasets/outputs').resources
 
-    def __init__(self, other: GFolder | str):
+    def __init__(self, other: GFolder | str, entrega: int):
         if isinstance(other, str):
             Subtopico.__init__(self, GResource.from_id(other))
 
@@ -37,12 +37,21 @@ class Subtopico:
 
         # FIXME: Cambiar ésto para agarrar la última entrega, o bien decidir en función de la cantidad de archivos.
         #   Está hardcodeado sólo para poder testearlo.
-        self.dataset: GFolder = next(filter(lambda x: 'segunda' in x.title, self.detectar_entregas()))
+        # self.dataset: GFolder = next(filter(lambda x: 'segunda' in x.title, self.detectar_entregas()))
+        # self.log.debug(f'Found dataset with version {self.dataset.title}')
+        entregas_alias = ['primera', 'segunda']
+        e_i = entrega-1
+        entrega = entregas_alias[e_i]
+
+        entregas = self.detectar_entregas()
+        self.dataset: GFolder = next(filter(lambda x: entrega in x.title, self.detectar_entregas()))
         self.log.debug(f'Found dataset with version {self.dataset.title}')
 
+
+
     @classmethod
-    def from_name(cls, name: str, root: str = ARGENDATA_FOLDER_ID):
-        result = cls(GResource.from_id(root).find_by_recursion(f'SUBTOPICOS/{name}'))
+    def from_name(cls, name: str, entrega: int, root: str = ARGENDATA_FOLDER_ID):
+        result = cls(GResource.from_id(root).find_by_recursion(f'SUBTOPICOS/{name}'), entrega)
         result.log.debug('Initialized correctly from name.')
         return result
 
