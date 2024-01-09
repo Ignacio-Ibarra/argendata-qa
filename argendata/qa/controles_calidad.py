@@ -65,9 +65,9 @@ def check_wrong_colname(cadena):
     """Devuelve True si la cadena es inválida, y False si no."""
     # Definir una expresión regular que acepte solo letras y números
     # Buscar si hay coincidencias en la cadena
-    coincidencias = PATRON_WRONG_COLNAME.search(cadena)
+    coincidencias = PATRON_WRONG_COLNAME.findall(cadena)
     # Devolver True si hay coincidencias, lo que significa que hay caracteres raros
-    return coincidencias is not None
+    return len(coincidencias) != 0
 
 @controles.register('header')
 def wrong_colnames(data: DataFrame, col_list: list[str]):
