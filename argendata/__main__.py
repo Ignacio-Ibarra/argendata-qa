@@ -18,7 +18,7 @@ def main():
     now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
     today_str = now_timestamp.strftime("%d/%m/%Y")
 
-    verificaciones['fecha'] = now_timestamp.strftime("%d/%m/%Y")
+    verificaciones['fecha'] = today_str
     verificaciones['subtopico'] = subtopico
 
     pp = pprint.PrettyPrinter(indent=4)
