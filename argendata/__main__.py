@@ -13,7 +13,7 @@ def main():
     auth = GAuth.authenticate()
     drive = GDrive(auth)
     
-    subtopico = 'MINERI'
+    subtopico = 'INVIED'
     verificaciones = qa.analyze(subtopico, entrega=1)
     now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
     today_str = now_timestamp.strftime("%d/%m/%Y")
