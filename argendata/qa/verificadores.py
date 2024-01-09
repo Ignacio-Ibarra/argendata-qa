@@ -8,6 +8,14 @@ from argendata.utils.files.charsets import get_codecs
 from .subtopico import Subtopico
 from .verificador.abstracto import Verifica
 from .controles_calidad import make_controls
+import chardet
+
+def encoding_with_chardet(file_path):
+    with open(file_path, 'rb') as file:
+        raw_data = file.read(10000)
+        result = chardet.detect(raw_data)
+
+    return result['encoding']
 
 @Verifica["Archivo"]
 class ControlCSV:
@@ -18,7 +26,15 @@ class ControlCSV:
 
     def verificacion_encoding(self, a_verificar):
         codecs = get_codecs(a_verificar)
-        self.codec = 'utf-8' if len(codecs) <= 0 else codecs[0][0]
+        if len(codecs) > 0:
+            self.codec = codecs[0][0]
+        else:
+            self.log.debug('Usando chardet para detectar encoding.')
+            self.codec = encoding_with_chardet(a_verificar)
+
+        if self.codec is None:
+            self.log.error('Encoding invalido. Usando utf-8 como default.')
+            self.codec = 'utf-8'
         return self.codec
 
     def verificacion_delimiter(self, a_verificar):
