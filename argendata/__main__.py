@@ -17,7 +17,10 @@ def main():
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(verificaciones)
 
-    with open(file('./output/result-'+subtopico+"-"+timeformat(datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires')))+'.json'), 'w') as fp:
+    now_timestamp = timeformat(datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires')))
+    output_filename = './output/result-'+subtopico+"-"+now_timestamp+'.json'
+
+    with open(file(output_filename), 'w') as fp:
         json.dump(obj=verificaciones, indent=4, fp=fp)
 
 if __name__ == "__main__":
