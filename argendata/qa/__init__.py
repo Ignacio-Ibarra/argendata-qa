@@ -6,7 +6,8 @@ from .verificadores import ControlSubtopico
 
 logger = LoggerFactory.getLogger("controles_calidad")
 
-def analyze(nombre_subtopico: str):
-    subtopico = Subtopico.from_name(nombre_subtopico)
+def analyze(nombre_subtopico: str, entrega: int):
+    logger.info(f'Generando reporte de calidad para {nombre_subtopico}...')
+    subtopico = Subtopico.from_name(nombre_subtopico, 1)
     verificaciones = subtopico.verificar(ControlSubtopico)
     return verificaciones
