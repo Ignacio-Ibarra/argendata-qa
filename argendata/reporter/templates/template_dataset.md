@@ -15,7 +15,7 @@ data.delimiter_resultado (str): 'OK' o 'MAL'
 data.qa (dict): posee un diccionario con los resultados del anlisis de calidad del dato. Dicho diccionario
 contiene las siguientes claves:
 
-    'tidy_data': str # Resultado si el dataset tiene la data en formato tidy. 'OK' o 'MAL'
+    'tidy_data': str # Resultado si el dataset tiene la data en formato tidy. 'OK' o 'ES POSIBLE QUE NO TENGA FORMATO LONG, ANALIZAR ARCHIVO'
     'duplicates': str, # Resultado si el dataset contiene o no filas duplicadas. 'OK' o 'MAL'
     'nullity_check': str, # Resultado si el dataset contiene columnas que deberían ser not nullable con nulos. 'OK' o 'MAL'
     'header': str, # Resultado si el dataset posee bien formateado el header. 'OK' o 'MAL'
