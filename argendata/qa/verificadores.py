@@ -123,7 +123,9 @@ class ControlSubtopico:
         plantilla = a_verificar.plantilla
 
         columnas = ['dataset_archivo', 'variable_nombre', 'tipo_dato', 'primary_key', 'nullable']
-        datasets_declarados_df: DataFrame = plantilla[columnas].drop_duplicates()
+        
+        # Esta variable no hace nada, estaba pensada para algo? 
+        datasets_declarados_df: DataFrame = plantilla[columnas].drop_duplicates() 
 
         datasets = ControlSubtopico.ConteoArchivos()
         datasets.declarados = set(plantilla['dataset_archivo'])
@@ -132,20 +134,44 @@ class ControlSubtopico:
 
         self.datasets = datasets.interseccion
 
+        # Lo agrego a mano para loggearlo pero habría que estructurar el resultado
+        datasets_no_cargados = datasets.declarados - datasets.efectivos
+        datasets_no_declarados = datasets.efectivos - datasets.declarados
+
         self.log.debug(f'#Datasets declarados = {len(datasets.declarados)}')
         self.log.debug(f'#Datasets efectivos = {len(datasets.efectivos)}')
         self.log.debug(f'#Intersección = {len(self.datasets)}')
+
+        self.log.debug(f"#Datasts no cargados = {len(datasets_no_cargados)}")
+        if len(datasets_no_cargados)>0: 
+            self.log.debug("\n".join(datasets_no_cargados))
+
+        self.log.debug(f"#Datasts no declarados = {len(datasets_no_declarados)}")
+        if len(datasets_no_declarados)>0: 
+            self.log.debug("\n".join(datasets_no_declarados))
 
         scripts_carpeta = a_verificar.carpeta.find_by_name('scripts')
         scripts = ControlSubtopico.ConteoArchivos()
         scripts.declarados = set(plantilla['script_archivo'])
         scripts.efectivos = set(
             map(getattrc('title'), scripts_carpeta.resources))
-
         self.scripts = scripts.interseccion
+        
+        # Lo agrego a mano para loggearlo pero habría que estructurar el resultado
+        scripts_no_cargados = scripts.declarados - scripts.efectivos
+        scripts_no_declarados = scripts.efectivos - scripts.declarados
+
         self.log.debug(f'#Scripts declarados = {len(scripts.declarados)}')
         self.log.debug(f'#Scripts efectivos = {len(scripts.efectivos)}')
         self.log.debug(f'#Intersección = {len(self.scripts)}')
+        
+        self.log.debug(f"#Scripts no cargados = {len(scripts_no_cargados)}")
+        if len(scripts_no_cargados)>0: 
+            self.log.debug("\n".join(scripts_no_cargados))
+
+        self.log.debug(f"#Scripts no declarados = {len(scripts_no_declarados)}")
+        if len(scripts_no_declarados)>0: 
+            self.log.debug("\n".join(scripts_no_declarados))
 
         completitud = ControlSubtopico.verificar_completitud(plantilla, self.datasets)
         self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
