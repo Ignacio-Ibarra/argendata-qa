@@ -154,22 +154,44 @@ class ControlSubtopico:
             df = read_csv(path, delimiter=delimiter, encoding=encoding)
             df.columns = df.columns.map(lambda x: x.strip())
 
+            if set(df.columns) != set(variables.to_list()):
+                self.log.error(f'Columnas mal formadas en {x}')
+                continue;
+
             keys = variables.loc[slice_plantilla.primary_key == True]
             keys = keys.str.strip().to_list()
 
             not_nullable = variables.loc[slice_plantilla.nullable == False]
             not_nullable = not_nullable.str.strip().to_list()
 
-            ensure_quality = make_controls({
+            diccionario = {
                 'tidy_data': keys,
                 'variables': (slice_plantilla, ),
                 'duplicates': keys,
-                'nullity_check': not_nullable,
+                # 'nullity_check': not_nullable,
                 'header': (df.columns, ),
                 'special_characters': ...
-            })
+            }
 
-            partial_result['quality_checks'] = ensure_quality(df)
+            flags_errores = {}
+
+            set_nn = set(not_nullable)
+            set_cs = set(df.columns)
+            intersect_columnas = set_nn.intersection(set_cs)
+            
+            if intersect_columnas == set(not_nullable):
+                diccionario['nullity_check'] = not_nullable
+            else:
+                flags_errores['nullity_check'] = (None, list(set_nn), list(set_cs))
+            
+            ensure_quality = make_controls(diccionario)
+
+            quality_analysis = ensure_quality(df)
+            
+            for k,v in flags_errores.items():
+                quality_analysis[k] = v
+
+            partial_result['quality_checks'] = quality_analysis
             result[x.title] = partial_result
 
         return result
