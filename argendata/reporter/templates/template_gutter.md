@@ -3,7 +3,7 @@ title: Reporte {{data.subtopico}}
 subtitle: Proyecto ArgenData
 author: Fundar
 institute: Fundar
-date: {{data.fecha}}
+date: {{data.fecha_verificacion}}
 # toc: true
 # toc-title: Contenidos
 
