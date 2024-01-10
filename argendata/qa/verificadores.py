@@ -131,6 +131,9 @@ class ControlSubtopico:
         datasets.declarados = set(plantilla['dataset_archivo'])
         datasets.efectivos = set(
             map(getattrc('title'), a_verificar.dataset.resources))
+        
+        datasets.efectivos = set(map(lambda x: x.strip(), datasets.efectivos))
+        datasets.declarados = set(map(lambda x: x.strip(), datasets.declarados))
 
         self.datasets = datasets.interseccion
 
@@ -144,11 +147,11 @@ class ControlSubtopico:
 
         self.log.debug(f"#Datasts no cargados = {len(datasets_no_cargados)}")
         if len(datasets_no_cargados)>0: 
-            self.log.debug("\n".join(datasets_no_cargados))
+            self.log.debug("\n".join("\t'"+x+"'" for x in datasets_no_cargados))
 
         self.log.debug(f"#Datasts no declarados = {len(datasets_no_declarados)}")
-        if len(datasets_no_declarados)>0: 
-            self.log.debug("\n".join(datasets_no_declarados))
+        if len(datasets_no_declarados) > 0: 
+            self.log.debug("\n".join("\t'"+x+"'" for x in datasets_no_declarados))
 
         scripts_carpeta = a_verificar.carpeta.find_by_name('scripts')
         scripts = ControlSubtopico.ConteoArchivos()
@@ -175,7 +178,13 @@ class ControlSubtopico:
 
         completitud = ControlSubtopico.verificar_completitud(plantilla, self.datasets)
         self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
-        return completitud.empty
+
+        resultado_info = {
+            'datasets': (datasets.declarados, datasets.efectivos, self.datasets),
+            'scripts': (scripts.declarados, scripts.efectivos, self.scripts)
+        }
+
+        return completitud.empty, resultado_info
 
     def verificacion_datasets(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)
@@ -198,6 +207,7 @@ class ControlSubtopico:
 
             if set(df.columns) != set(variables.to_list()):
                 self.log.error(f'Columnas mal formadas en {x}')
+                result[x.title] = partial_result
                 continue;
 
             keys = variables.loc[slice_plantilla.primary_key == True]
