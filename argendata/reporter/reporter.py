@@ -86,8 +86,6 @@ def template_factory(template_path:str)->Callable[[dict], str]:
 
 #==================================================================
 
-<<<<<<< HEAD
-=======
 class Gutter:
 
     template_path : str
