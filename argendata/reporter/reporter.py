@@ -299,7 +299,7 @@ expected_metadatos_incompletos = {
 expected_desglose_dataset = {
     'dataset_verificados' : dict|None 
 }
->>>>>>> 9fc7a3f (genero clases por template)
+
 
 
 def unexpected_types(key:str, expected_typename: str, got_typename: str) -> str:
