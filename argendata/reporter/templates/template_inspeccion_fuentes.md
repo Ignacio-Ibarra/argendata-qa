@@ -22,4 +22,4 @@ utilizadas en el subtópico. Es importante que las mismas cumplan con:
 
  -->
 
-{{data.tabla_inspeccion_fuentes.to_markdown()}}
+{{data.to_markdown()}}
