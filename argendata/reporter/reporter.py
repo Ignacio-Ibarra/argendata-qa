@@ -1,4 +1,3 @@
-import pandas as pd
 import json
 import os
 import numpy as np
@@ -9,6 +8,25 @@ from .constants import *
 
 # Acá está la clase de Template. 
 #============================================================
+
+class JinjaEnv: 
+
+    template_path:str
+
+    def __init__(self, template_path:str):
+        """Genera Environment de Jinja y toma el template_path para
+        retornar un objeto template de Jinja2
+
+        Args:
+            template_path (str): ruta relativa del template a utilizar
+        """
+        
+        # Cargar el entorno de Jinja2 desde el directorio actual
+        self.env = Environment(loader=FileSystemLoader("."))
+        
+        # Cargar el template de Markdown
+        self.template = self.env.get_template(template_path)
+
 
 class MDTemplate:
     
@@ -21,21 +39,34 @@ class MDTemplate:
         Args:
             template_path (str): _description_
             data (dict): _description_
+
         """
 
         self.template : Template =  JinjaEnv(template_path=template_path).template
         self.data = data
-        self.output_path = ...
+       
         
-    def render(self)->str|None:
+    def render_and_save_to_file(self, output_path:str, mode:Literal["w", "a", "w+"]='w+')->str|None:
+        """Toma un Template de Jinja y data en un dict, guarda un archivo de texto
+        (soporta html, md, txt) en el `output_path` y devuelve la ruta en la que se
+        ha guardado
+
+       Args:
+            output_path (str): path-like
+            mode (Literal['w', 'a', 'w+']) el valor por default es 'w+' (re-escribe) 
+
+        Returns:
+            str|None: devuelve path en donde se guardó el render o None en caso de error. 
+
         """
-        Toma un Template de Jinja y data en un dict y devuelve una string
-        """ 
         try: 
             # Renderizar el template con los datos del usuario
             string_rendered = self.template.render(data=self.data)
             
-            return string_rendered
+            # Guarda a archivo, acepta html, md, txt...
+            with open(output_path, mode=mode) as f: 
+                f.write(string_rendered)
+            return output_path
         
         except Exception as e:
             print(e)
@@ -50,10 +81,227 @@ def template_factory(template_path:str)->Callable[[dict], str]:
     Returns:
         Callable[[dict], str]: diccionario que contiene datos necesarios para incrustar en el template. 
     """
-    return lambda data: MDTemplate(template_path=template_path, data=data).render() 
+    return lambda data: MDTemplate(template_path=template_path, data=data).render_and_save_to_file()
 
 
+#==================================================================
 
+<<<<<<< HEAD
+=======
+class Gutter:
+
+    template_path : str
+    nombre_subtopico : str
+    fecha_reporte : str
+    
+    def __init__(self, template_path, nombre_subtopico:str, fecha_reporte:str): 
+
+        self.template_path = template_path
+        self.nombre_subtopico = nombre_subtopico
+        self.fecha_reporte = fecha_reporte
+        
+        self.data : dict = {
+            'fecha_reporte': self.fecha_reporte,
+            'nombre_subtopico': self.nombre_subtopico
+            }
+        
+        self.data_templated = MDTemplate(template_path=self.template_path, data=self.data)
+
+    def save_gutter_to_file(self, output_path:str, mode:Literal["w", "a", "w+"]='w+')->str|None:
+        """Guarda el Gutter lleno a un archivo de texto (soporta html, md, txt) en el `output_path` y devuelve la ruta en la que se
+        ha guardado. Por default re-escribe los archivos. 
+
+       Args:
+            output_path (str): path-like
+            mode (Literal['w', 'a', 'w+']) el valor por default es 'w+' (re-escribe) 
+
+        Returns:
+            str|None: devuelve path en donde se guardó el render o None en caso de error. 
+        """
+        return self.data_templated.render_and_save_to_file(output_path=output_path, mode=mode)
+
+
+#===============================================================================
+
+class Resumen:
+
+    template_path : str
+    cant_graficos : int
+    string_registro_duplicados : str
+    tabla_resumen : DataFrame
+    tabla_datasets_no_cargados: DataFrame
+    tabla_datasets_no_declarados: DataFrame
+    tabla_scripts_no_cargados: DataFrame
+    tabla_scripts_no_declarados:DataFrame
+    
+    def __init__(self, 
+                 template_path:str, 
+                 cant_graficos:str,
+                 string_errores_graficos:str,
+                 tabla_resumen : DataFrame,
+                 tabla_datasets_no_cargados : DataFrame,
+                 tabla_datasets_no_declarados : DataFrame,
+                 tabla_scripts_no_cargados : DataFrame,
+                 tabla_scripts_no_declarados : DataFrame): 
+
+        self.data : dict = {   
+            'template_path' : template_path,
+            'cant_graficos' : cant_graficos,
+            'string_errores_graficos' : string_errores_graficos,
+            'tabla_resumen' : tabla_resumen,
+            'tabla_datasets_no_cargados' : tabla_datasets_no_cargados,
+            'tabla_datasets_no_declarados' : tabla_datasets_no_declarados,
+            'tabla_scripts_no_cargados' : tabla_scripts_no_cargados,
+            'tabla_scripts_no_declarados' : tabla_scripts_no_declarados
+            }
+        
+        self.data_templated = MDTemplate(template_path=self.template_path, data=self.data)
+
+    def save_resumen_to_file(self, output_path:str, mode:Literal["w", "a", "w+"]='w+')->str|None:
+        """Guarda el Gutter lleno a un archivo de texto (soporta html, md, txt) en el `output_path` y devuelve la ruta en la que se
+        ha guardado. Por default re-escribe los archivos. 
+
+       Args:
+            output_path (str): path-like
+            mode (Literal['w', 'a', 'w+']) el valor por default es 'w+' (re-escribe) 
+
+        Returns:
+            str|None: devuelve path en donde se guardó el render o None en caso de error. 
+        """
+        return self.data_templated.render_and_save_to_file(output_path=output_path, mode=mode)
+
+
+#======================================================================
+class InspeccionFuentes:
+
+    template_path : str
+    tabla_inspeccion_fuentes:DataFrame
+    
+    def __init__(self, 
+                 template_path:str, 
+                 tabla_inspeccion_fuentes : DataFrame): 
+
+        self.data : dict = {
+            'template_path' : template_path,
+            'tabla_inspeccion_fuentes' : tabla_inspeccion_fuentes 
+            }
+        
+        self.data_templated = MDTemplate(template_path=self.template_path, data=self.data)
+
+    def save_inspeccion_fuentes_to_file(self, output_path:str, mode:Literal["w", "a", "w+"]='w+')->str|None:
+        """Guarda el Gutter lleno a un archivo de texto (soporta html, md, txt) en el `output_path` y devuelve la ruta en la que se
+        ha guardado. Por default re-escribe los archivos. 
+
+       Args:
+            output_path (str): path-like
+            mode (Literal['w', 'a', 'w+']) el valor por default es 'w+' (re-escribe) 
+
+        Returns:
+            str|None: devuelve path en donde se guardó el render o None en caso de error. 
+        """
+        return self.data_templated.render_and_save_to_file(output_path=output_path, mode=mode)
+
+
+#===========================================================================
+class MetadatosIncompletos:
+
+    template_path : str
+    tabla_metadatos_incompletos:DataFrame
+    
+    def __init__(self, 
+                 template_path:str, 
+                 tabla_metadatos_incompletos : DataFrame): 
+        
+        self.template_path = template_path
+        self.data : dict = {
+           'tabla_inspeccion_fuentes' : tabla_metadatos_incompletos 
+            }
+        
+        self.data_templated = MDTemplate(template_path=self.template_path, data=self.data)
+
+    def save_metadatos_incompletos_to_file(self, output_path:str, mode:Literal["w", "a", "w+"]='w+')->str|None:
+        """Guarda el Gutter lleno a un archivo de texto (soporta html, md, txt) en el `output_path` y devuelve la ruta en la que se
+        ha guardado. Por default re-escribe los archivos. 
+
+       Args:
+            output_path (str): path-like
+            mode (Literal['w', 'a', 'w+']) el valor por default es 'w+' (re-escribe) 
+
+        Returns:
+            str|None: devuelve path en donde se guardó el render o None en caso de error. 
+        """
+        return self.data_templated.render_and_save_to_file(output_path=output_path, mode=mode)
+
+
+class DetallesDataset: 
+
+    template_path : str
+    nombre_archivo : str
+    encoding_archivo : str
+    encoding_resultado : str
+    delimiter_archivo : str
+    delimiter_archivo_resultado : str
+    qa : dict
+
+    def __init__(self, 
+                 template_path:str, 
+                 tabla_metadatos_incompletos : DataFrame): 
+
+        self.data : dict = {
+            'template_path' : template_path,
+            'tabla_inspeccion_fuentes' : tabla_metadatos_incompletos 
+            }
+        
+        self.data_templated = MDTemplate(template_path=self.template_path, data=self.data)
+
+    def save_control_dataset_to_file(self, output_path:str, mode:Literal["w", "a", "w+"]='w+')->str|None:
+        """Guarda el Gutter lleno a un archivo de texto (soporta html, md, txt) en el `output_path` y devuelve la ruta en la que se
+        ha guardado. Por default re-escribe los archivos. 
+
+       Args:
+            output_path (str): path-like
+            mode (Literal['w', 'a', 'w+']) el valor por default es 'w+' (re-escribe) 
+
+        Returns:
+            str|None: devuelve path en donde se guardó el render o None en caso de error. 
+        """
+        return self.data_templated.render_and_save_to_file(output_path=output_path, mode=mode)
+
+
+Integer = int|np.int64
+
+# Esto falta corregir. 
+# Hay que tener un dict que no haya que procesar datos para incrustarlos en el markdown. 
+# Así como está no sirve. 
+expected_gutter = {
+    'subtopico' : str,                                  # Corregido - datos a incrustar en tamplate GUTTER
+    'fecha_verificacion' : str                          # Corregido - datos a incrustar en tamplate GUTTER
+    }                         
+
+expected_resumen = {
+    "string_errores_graficos" : str,                    # Corregido - datos a incrustar en tamplate RESUMEN
+    "tabla_resumen" : DataFrame,                        # Corregido - datos a incrustar en tamplate RESUMEN
+    "tabla_datasets_no_cargados" : DataFrame,           # Corregido - datos a incrustar en tamplate RESUMEN
+    "tabla_datasets_no_declarados" : DataFrame,         # Corregido - datos a incrustar en tamplate RESUMEN
+    "tabla_scripts_no_declarados" : DataFrame,          # Corregido - datos a incrustar en tamplate RESUMEN
+    "tabla_scripts_no_cargados" : DataFrame,            # Corregido - datos a incrustar en tamplate RESUMEN
+    "tabla_variables_no_declaradas" : DataFrame,        # Corregido - datos a incrustar en tamplate RESUMEN
+    "tabla_variables_no_cargadas" : DataFrame          # Corregido - datos a incrustar en tamplate RESUMEN
+    }
+
+expected_insepeccion_fuentes = {
+    "tabla_inspeccion_fuentes" : DataFrame             # Corregido - datos a incrustar en tamplate INSPECCION FUENTES
+    }
+
+expected_metadatos_incompletos = {
+    'tabla_metadatos_incompletos' : DataFrame|None          # Corregido - datos a incrustar en tamplate METADATOS INCOMPLETOS
+    }
+
+
+expected_desglose_dataset = {
+    'dataset_verificados' : dict|None 
+}
+>>>>>>> 9fc7a3f (genero clases por template)
 
 
 def unexpected_types(key:str, expected_typename: str, got_typename: str) -> str:
@@ -177,23 +425,7 @@ class Results:
         return rearranged_dict
 
 
-class JinjaEnv: 
 
-    template_path:str
-
-    def __init__(self, template_path:str):
-        """Genera Environment de Jinja y toma el template_path para
-        retornar un objeto template de Jinja2
-
-        Args:
-            template_path (str): ruta relativa del template a utilizar
-        """
-        
-        # Cargar el entorno de Jinja2 desde el directorio actual
-        self.env = Environment(loader=FileSystemLoader("."))
-        
-        # Cargar el template de Markdown
-        self.template = self.env.get_template(template_path)
 
 
 
