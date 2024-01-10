@@ -7,13 +7,14 @@ import pandas as pd
 import pprint
 import json
 import pytz
+import os
 from .utils.logger import LoggerFactory
 from .reporter import JinjaEnv
 
 def generate_template(template_path: str, filepath: str):
     env = JinjaEnv(template_path)
     def curry_data(data):
-        with open(filepath, 'w') as fp:
+        with open(filepath, 'w', encoding='utf-8') as fp:
             fp.write(env.template.render(data=data))
     return curry_data
 
@@ -132,19 +133,24 @@ def main():
         }
         resumenes_ds.append(resumen_ds)
 
-    templates = [generate_template('./argendata/reporter/templates/template_gutter.md', './output/gutter.md'),
-                 generate_template('./argendata/reporter/templates/template_resumen.md', './output/resumen.md'),
-                 generate_template('./argendata/reporter/templates/template_inspeccion_fuentes.md', './output/fuentes.md')]
+    params = [('./argendata/reporter/templates/template_gutter.md', file(f'./output/render-{subtopico}/gutter.md')),
+                 ('./argendata/reporter/templates/template_resumen.md', file(f'./output/render-{subtopico}/resumen.md')),
+                 ('./argendata/reporter/templates/template_inspeccion_fuentes.md', file(f'./output/render-{subtopico}/fuentes.md'))]
     
     for x in resumenes_ds:
-        templates.append(generate_template('./argendata/reporter/templates/template_dataset.md', './output/'+x['nombre']+".md"))
+        params.append(('./argendata/reporter/templates/template_dataset.md', file(f'./output/render-{subtopico}/'+x['nombre']+".md")))
+
+    templates = list(map(lambda x: generate_template(*x), params))
 
     datos_template = [gutter, resumen, fuentes, *resumenes_ds]
 
     # O bien fs es functorialmente aplicativo sobre xs,
     # o bien uso una lista zippeable (Que es en si misma un functor aplicativo)
     for f,x in zip(templates, datos_template):
-        f(x)
+        f(x) # <*>
+
+
+    with open(f'./output/render-{subtopico}/{subtopico}.md', 'w') as merged_file: [merged_file.write(open(file).read()) for file in map(lambda x: x[1], params) if os.path.isfile(file)]
 
 
     log.debug(len(datos_template))
