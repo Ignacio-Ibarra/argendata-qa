@@ -122,11 +122,6 @@ class ControlSubtopico:
     def verificacion_sistema_de_archivos(self, a_verificar: Subtopico):
         plantilla = a_verificar.plantilla
 
-        columnas = ['dataset_archivo', 'variable_nombre', 'tipo_dato', 'primary_key', 'nullable']
-        
-        # Esta variable no hace nada, estaba pensada para algo? 
-        datasets_declarados_df: DataFrame = plantilla[columnas].drop_duplicates() 
-
         datasets = ControlSubtopico.ConteoArchivos()
         datasets.declarados = set(plantilla['dataset_archivo'])
         datasets.efectivos = set(
@@ -158,6 +153,10 @@ class ControlSubtopico:
         scripts.declarados = set(plantilla['script_archivo'])
         scripts.efectivos = set(
             map(getattrc('title'), scripts_carpeta.resources))
+        
+        scripts.efectivos = set(map(lambda x: x.strip(), scripts.efectivos))
+        scripts.declarados = set(map(lambda x: x.strip(), scripts.declarados))
+
         self.scripts = scripts.interseccion
         
         # Lo agrego a mano para loggearlo pero habría que estructurar el resultado
@@ -170,18 +169,18 @@ class ControlSubtopico:
         
         self.log.debug(f"#Scripts no cargados = {len(scripts_no_cargados)}")
         if len(scripts_no_cargados)>0: 
-            self.log.debug("\n".join(scripts_no_cargados))
+            self.log.debug("\n".join("\t'"+x+"'" for x in scripts_no_cargados))
 
         self.log.debug(f"#Scripts no declarados = {len(scripts_no_declarados)}")
         if len(scripts_no_declarados)>0: 
-            self.log.debug("\n".join(scripts_no_declarados))
+            self.log.debug("\n".join("\t'"+x+"'" for x in scripts_no_declarados))
 
         completitud = ControlSubtopico.verificar_completitud(plantilla, self.datasets)
         self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
 
         resultado_info = {
-            'datasets': (datasets.declarados, datasets.efectivos, self.datasets),
-            'scripts': (scripts.declarados, scripts.efectivos, self.scripts)
+            'datasets': {'declarados': list(datasets.declarados), 'efectivos': list(datasets.efectivos), 'interseccion': list(self.datasets)},
+            'scripts':  {'declarados': list(scripts.declarados),  'efectivos': list(scripts.efectivos),  'interseccion': list(self.scripts)}
         }
 
         return completitud.empty, resultado_info
