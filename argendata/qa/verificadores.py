@@ -88,10 +88,11 @@ class ControlSubtopico:
 
         nivel_registro = plantilla.groupby(columnas).size()
         errores = np.unique(nivel_registro[nivel_registro > 1].index.get_level_values('orden_grafico').tolist())
-        if len(errores) > 0:
-            result = ", ".join(map(str, errores))
+        # if len(errores) > 0:
+        #     result = ", ".join(map(str, errores))
 
-        return result
+        # return result
+        return n_graficos, list(errores)
 
     @staticmethod
     def inspeccion_fuentes(plantilla, columnas=['fuente_nombre', 'institucion']):
