@@ -8,6 +8,14 @@ import pprint
 import json
 import pytz
 from .utils.logger import LoggerFactory
+from .reporter import JinjaEnv
+
+def generate_template(template_path: str, filepath: str):
+    env = JinjaEnv(template_path)
+    def curry_data(data):
+        with open(filepath, 'w') as fp:
+            fp.write(env.template.render(data=data))
+    return curry_data
 
 def main():
     log = LoggerFactory.getLogger('main')
@@ -124,8 +132,20 @@ def main():
         }
         resumenes_ds.append(resumen_ds)
 
+    templates = [generate_template('./argendata/reporter/templates/template_gutter.md', './output/gutter.md'),
+                 generate_template('./argendata/reporter/templates/template_resumen.md', './output/resumen.md'),
+                 generate_template('./argendata/reporter/templates/template_inspeccion_fuentes.md', './output/fuentes.md')]
+    
+    for x in resumenes_ds:
+        templates.append(generate_template('./argendata/reporter/templates/template_dataset.md', './output/'+x['nombre']+".md"))
 
     datos_template = [gutter, resumen, fuentes, *resumenes_ds]
+
+    # O bien fs es functorialmente aplicativo sobre xs,
+    # o bien uso una lista zippeable (Que es en si misma un functor aplicativo)
+    for f,x in zip(templates, datos_template):
+        f(x)
+
 
     log.debug(len(datos_template))
 
