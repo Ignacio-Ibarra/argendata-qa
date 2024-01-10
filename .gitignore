@@ -12,6 +12,8 @@ argendata/reporter/prueba.py
 argendata/reporter/output.md
 argendata/reporter/.json
 argendata/reporter/reporter_viejo.py
+argendata/reporter/templates_comentados/
+
 
 
 # Byte-compiled / optimized / DLL files
