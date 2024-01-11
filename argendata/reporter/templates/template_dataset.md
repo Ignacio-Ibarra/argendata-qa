@@ -9,11 +9,25 @@
 
 #### Controles de formateo del dataset
 
-- **Formato long**: {{data.qa['tidy_data']}}
-- **Filas duplicadas**: {{data.qa['duplicates']}}
-- **Columnas con nulos**: {{data.qa['nullity_check']}}
-- **Nombres columnas**: {{data.qa['header']}}
-- **Caracteres raros**: {{data.qa['special_characters']}}
+El primer control realizado es si los datos se presentan en formato `long` o `wide`. Es importante
+que los datos se presenten de manera `long` para que el dataset tenga una estructura normalizada y en un 
+futuro podamos relacionar datos entre distintos datasets.
+
+Por el momento la implementación de éste control es en cierto modo probabilística: no podemos asegurar 
+cual es el formato, pero sí nos interesa mostrar un `warning`. El `warning` es bastante estricto, puesto 
+que se activa cuando la cantidad de columnas declaradas como `claves` es menos que el 50% de las columnas. 
+
+*   **Resultado de Control Formato Long**: {{data.qa['tidy_data']}}
+
+El segundo resultado es observar la **presencia de caracteres raros en los nombres de las columnas**. 
+
+*   **Nombres columnas**: {{data.qa['header']}}
+
+#### Duplicados, nulos y caracteres raros. 
+
+*   **Filas duplicadas**: {{data.qa['duplicates']}}
+*   **Columnas con nulos**: {{data.qa['nullity_check']}}
+*   **Caracteres raros**: {{data.qa['special_characters']}}
 
 #### Tipos de Datos 
 
