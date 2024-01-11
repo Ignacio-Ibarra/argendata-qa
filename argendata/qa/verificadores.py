@@ -198,7 +198,13 @@ class ControlSubtopico:
             variables = slice_plantilla.loc[:, 'variable_nombre']
 
             path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
-            resultados_csv = ControlCSV(x.title, path).verificar_todo()
+
+            try:
+                resultados_csv = ControlCSV(x.title, path).verificar_todo()
+            except UnicodeDecodeError as e:
+                self.log.error(f"No se pudo abrir {x.title}")
+                self.log.error(str(e))
+                continue
 
             encoding = resultados_csv['verificacion_encoding']
             delimiter = resultados_csv['verificacion_delimiter']
