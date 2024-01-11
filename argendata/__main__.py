@@ -23,7 +23,7 @@ def main():
     auth = GAuth.authenticate()
     drive = GDrive(auth)
     
-    subtopico = 'CRECIM'
+    subtopico = 'DESHUM'
     verificaciones = qa.analyze(subtopico, entrega=1)
     now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
     today_str = now_timestamp.strftime("%d/%m/%Y")
@@ -32,7 +32,7 @@ def main():
     verificaciones['subtopico'] = subtopico
 
     pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(verificaciones)
+    #  pp.pprint(verificaciones)
 
     output_filename = './output/result-'+subtopico+"-"+timeformat(now_timestamp)+'.json'
 
@@ -56,7 +56,7 @@ def main():
     # Armo data de Template Resumen. 
     cant_graficos, errores = verificaciones['verificacion_nivel_registro']
 
-    string_errores_graficos = lambda es: f"{len(es)} errores graficos." + '' if len(es) == 0 else f"Graficos {', '.join(es)}"
+    string_errores_graficos = lambda es: f"{len(es)} errores graficos." + '' if len(es) == 0 else f"Graficos {', '.join(map(str, es))}"
     """'es' deberia ser una lista que contiene los numeros de grafico que tienen errores. Devuelve la string formateada."""
 
     filesystem_analysis_result = verificaciones['verificacion_sistema_de_archivos'][1]
@@ -136,6 +136,14 @@ def main():
         encoding = chequeos['detected_encoding']
         delimiter = chequeos['delimiter']
 
+        resumen_ds = {
+            'nombre': dataset_name,
+            'encoding': encoding,
+            'encoding_resultado': 'OK' if encoding in ENCODINGS_VALIDOS else f"Encoding inválido. Tuvo que haber sido uno de estos: {', '.join(ENCODINGS_VALIDOS)}",
+            'delimiter': delimiter,
+            'delimiter_resultado': 'OK' if delimiter == ',' else f"Delimiter inválido. El delimiter siempre debe ser ','",
+        }
+
         ##  Armo data de los Datasets
 
         if 'quality_checks' not in chequeos.keys():
@@ -148,6 +156,8 @@ def main():
                 'tipo_datos': pd.DataFrame(),
                 'detalle_caracteres_especiales': pd.DataFrame()
             }
+
+            resumen_ds['qa'] = quality_checks
             resumenes_ds.append(resumen_ds)
             continue
 
@@ -202,8 +212,8 @@ def main():
             caracteres_especiales_df = pd.DataFrame([('-','-','-')], columns=['Variable Nombre', 'Cadena con caracteres especiales','Filas'])
         
         quality_checks = {
-                'tidy_data': 'OK' if quality_checks_['tidy_data'] else 'Es posible que no tenga formato Long, analizar archivo.',
-                'duplicates': 'OK' if quality_checks_['duplicates'] else 'Se encontraron filas duplicadas en el dataset, para las variables definidas como claves.',
+                'tidy_data': 'No se pudo hacer debido a un error' if 'tidy_data' not in quality_checks_.keys() else 'OK' if quality_checks_['tidy_data'] else 'Es posible que no tenga formato Long, analizar archivo.',
+                'duplicates': 'No se pudo hacer debido a un error' if 'duplicates' not in quality_checks_.keys() else 'OK' if quality_checks_['duplicates'] else 'Se encontraron filas duplicadas en el dataset, para las variables definidas como claves.',
                 'nullity_check': 'No se pudo realizar debido a un error.' if isinstance(quality_checks_['nullity_check'], tuple) else 'OK' if quality_checks_['nullity_check'] is True else 'Se encontraron valores nulos para las variables definidas como NOT NULLABLE',
                 'header': 'OK' if quality_checks_['header'][0] is True else 'Se encontraron columnas con nombres mal formateados ver [documentación]((https://docs.google.com/document/d/1vH59Akk1eZTb0m4wIyEdhyVV_rx2q8lg4bG5k2tJP20/edit?usp=sharing))',
                 'special_characters': 'OK' if quality_checks_['special_characters'][0] else 'Hay columnas que poseen caracteres raros, ver detalle abajo.',
@@ -211,14 +221,7 @@ def main():
                 'detalle_caracteres_especiales': caracteres_especiales_df
             }
         
-        resumen_ds = {
-            'nombre': dataset_name,
-            'encoding': encoding,
-            'encoding_resultado': 'OK' if encoding in ENCODINGS_VALIDOS else f"Encoding inválido. Tuvo que haber sido uno de estos: {', '.join(ENCODINGS_VALIDOS)}",
-            'delimiter': delimiter,
-            'delimiter_resultado': 'OK' if delimiter == ',' else f"Delimiter inválido. El delimiter siempre debe ser ','",
-            'qa': quality_checks
-        }
+        resumen_ds['qa'] = quality_checks
         resumenes_ds.append(resumen_ds)
 
     params = [('./argendata/reporter/templates/template_gutter.md', file(f'./output/render-{subtopico}/gutter.md')),
@@ -243,6 +246,7 @@ def main():
 
 
     log.debug(len(datos_template))
+
 
 
 if __name__ == "__main__":
