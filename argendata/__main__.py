@@ -258,8 +258,8 @@ def main():
         f(x) # <*>
 
 
-    with open(f'./output/render-{subtopico}/{subtopico}.md', 'w') as merged_file: 
-        [merged_file.write(open(file).read()) for file in map(lambda x: x[1], params) if os.path.isfile(file)]
+    with open(f'./output/render-{subtopico}/{subtopico}.md', 'w', encoding='utf-8') as merged_file: 
+        [merged_file.write(open(file, encoding='utf-8').read()) for file in map(lambda x: x[1], params) if os.path.isfile(file)]
 
 
     log.debug(len(datos_template))
