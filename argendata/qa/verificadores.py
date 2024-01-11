@@ -29,6 +29,7 @@ class ControlCSV:
     def verificacion_encoding(self, a_verificar):
         codecs = get_codecs(a_verificar)
         if len(codecs) > 0:
+            self.log.debug('Usando programa propio para detectar encoding.')
             self.codec = codecs[0][0]
         else:
             self.log.debug('Usando chardet para detectar encoding.')
