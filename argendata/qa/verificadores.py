@@ -75,7 +75,7 @@ class ControlSubtopico:
 
         plantilla.loc[:, 'tipo_dato'] = _tipo_dato
 
-        plantilla['variable_nombre'].apply(lambda x: x.strip())
+        plantilla['variable_nombre'].apply(lambda x: str(x).strip())
 
         self.a_verificar = s
 
