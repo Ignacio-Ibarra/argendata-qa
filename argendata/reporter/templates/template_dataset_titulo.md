@@ -12,3 +12,6 @@ significa que los conjuntos no tienen ningún elemento en común.
 
 {{data.to_markdown(index=False)}}
 
+En caso de que el reporte sea `Error` significa que el archivo del dataset no pudo ser 
+leído correctamente incluso con el `encoding` y el `delimiter` encontrados y por ende no pudieron implementarse controles de
+formato del dataset y de calidad del dato. 
