@@ -1,6 +1,7 @@
 import csv
 from typing import TextIO
 from pandas import DataFrame, read_csv
+from pandas.errors import ParserError
 import numpy as np
 from argendata.utils.gwrappers import GResource, GFile
 from argendata.utils import getattrc, strip_accents, dtypes_conversion as dtype_map
@@ -9,6 +10,7 @@ from .subtopico import Subtopico
 from .verificador.abstracto import Verifica
 from .controles_calidad import make_controls
 import chardet
+import re
 
 def encoding_with_chardet(file_path):
     with open(file_path, 'rb') as file:
@@ -67,8 +69,8 @@ class ControlSubtopico:
         plantilla = s.plantilla
 
         _tipo_dato = plantilla.loc[:, 'tipo_dato']
-        _tipo_dato = _tipo_dato.str.lower().apply(strip_accents)
-        _tipo_dato = _tipo_dato.map(dtype_map).fillna("no completo")
+        _tipo_dato = _tipo_dato.fillna("no completo").str.lower().apply(strip_accents)
+        _tipo_dato = _tipo_dato.map(dtype_map)
 
         plantilla.loc[:, 'tipo_dato'] = _tipo_dato
 
@@ -92,7 +94,7 @@ class ControlSubtopico:
         #     result = ", ".join(map(str, errores))
 
         # return result
-        return n_graficos, list(errores)
+        return n_graficos, list(map(int, errores))
 
     @staticmethod
     def inspeccion_fuentes(plantilla, columnas=['fuente_nombre', 'institucion']):
@@ -202,13 +204,19 @@ class ControlSubtopico:
             partial_result['detected_encoding'] = encoding
             partial_result['delimiter'] = delimiter
 
-            df = read_csv(path, delimiter=delimiter, encoding=encoding)
+            try:
+                df = read_csv(path, delimiter=delimiter, encoding=encoding)
+            except ParserError as e:
+                if re.match(pattern=".*Expected .* fields in line .* saw .*", string=str(e)):
+                    self.log.error(str(e))
+                    continue
+
             df.columns = df.columns.map(lambda x: x.strip())
 
             if set(df.columns) != set(variables.to_list()):
                 self.log.error(f'Columnas mal formadas en {x}')
                 result[x.title] = partial_result
-                continue;
+                continue
 
             keys = variables.loc[slice_plantilla.primary_key == True]
             keys = keys.str.strip().to_list()
@@ -217,9 +225,9 @@ class ControlSubtopico:
             not_nullable = not_nullable.str.strip().to_list()
 
             diccionario = {
-                'tidy_data': keys,
+                # 'tidy_data': keys,
                 'variables': (slice_plantilla, ),
-                'duplicates': keys,
+                # 'duplicates': keys,
                 # 'nullity_check': not_nullable,
                 'header': (df.columns, ),
                 'special_characters': ...
@@ -227,12 +235,15 @@ class ControlSubtopico:
 
             flags_errores = {}
 
+            if len(keys) > 0:
+                diccionario['tidy_data'] = diccionario['duplicates'] = keys
+
             set_nn = set(not_nullable)
             set_cs = set(df.columns)
             intersect_columnas = set_nn.intersection(set_cs)
             
             if intersect_columnas == set(not_nullable):
-                diccionario['nullity_check'] = not_nullable
+                diccionario['nullity_check'] = not_nullable if len(not_nullable) > 0 else (not_nullable, )
             else:
                 flags_errores['nullity_check'] = (None, list(set_nn), list(set_cs))
             
