@@ -23,7 +23,7 @@ def main():
     auth = GAuth.authenticate()
     drive = GDrive(auth)
     
-    subtopico = 'ACECON'
+    subtopico = 'INVIED'
     verificaciones = qa.analyze(subtopico, entrega=1)
     now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
     today_str = now_timestamp.strftime("%d/%m/%Y")
@@ -212,7 +212,9 @@ def main():
             caracteres_especiales_df = pd.DataFrame([('-','-','-')], columns=['Variable Nombre', 'Cadena con caracteres especiales','Filas'])
         
         quality_checks = {
-                'tidy_data': 'No se pudo hacer debido a un error' if 'tidy_data' not in quality_checks_.keys() else 'OK' if quality_checks_['tidy_data'] else 'Es posible que no tenga formato Long, analizar archivo.',
+                'tidy_data': 'No se pudo hacer debido a un error' if 'tidy_data' not in quality_checks_.keys() else 'OK' if quality_checks_['tidy_data'] else \
+                    'Es posible que no tenga formato `long`, analizar archivo. Por favor completar [aquí]() si el dataset se encuentra o no'
+                    'en formato `long` para poder tomarlo en cuenta en un futuro reporte. En caso de que esté en formato `wide` por favor corregir el archivo',
                 'duplicates': 'No se pudo hacer debido a un error' if 'duplicates' not in quality_checks_.keys() else 'OK' if quality_checks_['duplicates'] else 'Se encontraron filas duplicadas en el dataset, para las variables definidas como claves.',
                 'nullity_check': 'No se pudo realizar debido a un error.' if isinstance(quality_checks_['nullity_check'], tuple) else 'OK' if quality_checks_['nullity_check'] is True else 'Se encontraron valores nulos para las variables definidas como NOT NULLABLE',
                 'header': 'OK' if quality_checks_['header'][0] is True else 'Se encontraron columnas con nombres mal formateados ver [documentación]((https://docs.google.com/document/d/1vH59Akk1eZTb0m4wIyEdhyVV_rx2q8lg4bG5k2tJP20/edit?usp=sharing))',
