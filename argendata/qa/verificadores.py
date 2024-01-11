@@ -186,7 +186,7 @@ class ControlSubtopico:
             'scripts':  {'declarados': list(scripts.declarados),  'efectivos': list(scripts.efectivos),  'interseccion': list(self.scripts)}
         }
 
-        return completitud.empty, resultado_info
+        return completitud.empty, resultado_info, completitud.to_dict()
 
     def verificacion_datasets(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)

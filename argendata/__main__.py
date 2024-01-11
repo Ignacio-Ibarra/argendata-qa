@@ -23,7 +23,7 @@ def main():
     auth = GAuth.authenticate()
     drive = GDrive(auth)
     
-    subtopico = 'DESHUM'
+    subtopico = 'ACECON'
     verificaciones = qa.analyze(subtopico, entrega=1)
     now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
     today_str = now_timestamp.strftime("%d/%m/%Y")
@@ -224,9 +224,23 @@ def main():
         resumen_ds['qa'] = quality_checks
         resumenes_ds.append(resumen_ds)
 
+
+    metadatos_incompletos_ = verificaciones['verificacion_sistema_de_archivos'][2]
+    metadatos_incompletos = {
+                'Dataset Archivo': ['-'],
+                'Columna Plantilla': ['-'],
+                'Filas Incompletas': ['-']
+    }
+
+    if len(metadatos_incompletos_.keys()) > 0:
+        metadatos_incompletos = metadatos_incompletos_
+
+    metadatos_incompletos = pd.DataFrame.from_dict(metadatos_incompletos)
+
     params = [('./argendata/reporter/templates/template_gutter.md', file(f'./output/render-{subtopico}/gutter.md')),
                  ('./argendata/reporter/templates/template_resumen.md', file(f'./output/render-{subtopico}/resumen.md')),
                  ('./argendata/reporter/templates/template_inspeccion_fuentes.md', file(f'./output/render-{subtopico}/fuentes.md')),
+                 ('./argendata/reporter/templates/template_metadatos_incompletos.md', file(f'./output/render-{subtopico}/metinc.md')),
                  ('./argendata/reporter/templates/template_dataset_titulo.md', file(f'./output/render-{subtopico}/dataset_titulo.md'))]
     
     for x in resumenes_ds:
@@ -234,7 +248,7 @@ def main():
 
     templates = list(map(lambda x: generate_template(*x), params))
 
-    datos_template = [gutter, resumen, fuentes, datasest_verificados_df, *resumenes_ds] 
+    datos_template = [gutter, resumen, fuentes, metadatos_incompletos, datasest_verificados_df, *resumenes_ds] 
 
     # O bien fs es functorialmente aplicativo sobre xs,
     # o bien uso una lista zippeable (Que es en si misma un functor aplicativo)
@@ -242,7 +256,8 @@ def main():
         f(x) # <*>
 
 
-    with open(f'./output/render-{subtopico}/{subtopico}.md', 'w') as merged_file: [merged_file.write(open(file).read()) for file in map(lambda x: x[1], params) if os.path.isfile(file)]
+    with open(f'./output/render-{subtopico}/{subtopico}.md', 'w') as merged_file: 
+        [merged_file.write(open(file).read()) for file in map(lambda x: x[1], params) if os.path.isfile(file)]
 
 
     log.debug(len(datos_template))

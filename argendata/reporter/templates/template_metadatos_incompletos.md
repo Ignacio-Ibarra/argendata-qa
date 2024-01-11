@@ -7,4 +7,4 @@ datos faltantes y la cantidad. Recordamos que no puede haber datos faltantes en 
 de la plantilla de metadatos. 
 
 
-{{data.tabla_metadatos_incompletos.to_markdown()}}
+{{data.to_markdown(index=False)}}
