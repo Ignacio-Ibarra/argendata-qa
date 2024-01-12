@@ -275,6 +275,9 @@ class ControlSubtopico:
         result = dict()
         errors = []
         for x in csvs:
+            if 'geojson' in x.title.lower():
+                self.log.info(f'Salteando {x.title} por ser GeoJSON')
+                continue
             slice_plantilla = a_verificar.plantilla.loc[a_verificar.plantilla.dataset_archivo == x.title]
             partial_result: dict
             try:
