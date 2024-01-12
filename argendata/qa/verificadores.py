@@ -300,4 +300,4 @@ class ControlSubtopico:
                 self.log.error("\t"+error[0])
             print()
 
-        return result#, errors
+        return result, errors
