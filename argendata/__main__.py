@@ -10,6 +10,31 @@ import pytz
 import os
 from .utils.logger import LoggerFactory
 from .reporter import JinjaEnv
+from pandas import DataFrame
+import pandas as pd
+
+def bold_fmt(s:str)->str:
+    return f"**{s}**"
+
+def wrap_string(string: str, max_length: int) -> str:
+    if len(string) <= max_length:
+        return string
+    
+    prefix_suffix_length = max_length - 3
+    half_length = prefix_suffix_length // 2
+    return string[:half_length+1] + '...' + string[-half_length:]
+
+
+def make_table(df:DataFrame, bold_cols:bool = False, wrap_text:bool = False, wrapped_cols:list[str]|None = None, max_width:int|None = None)->DataFrame: 
+    
+    if wrap_text:
+        for col in wrapped_cols:
+            df[col] = df[col].apply(lambda s: wrap_string(s, max_length=max_width))
+
+    df.columns = [bold_fmt(col) for col in df.columns]
+    return df
+
+
 
 def generate_template(template_path: str, filepath: str):
     env = JinjaEnv(template_path)
@@ -59,26 +84,31 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
     }
 
     tabla_resumen = pd.DataFrame(tabla_resumen_, index = ['Declarados', 'Efectivos', 'Interseccion', 'No declarados', 'No cargados'])
+    tabla_resumen = make_table(df=tabla_resumen, bold_cols=True)
 
     if len(datasets_no_declarados) == 0: 
         tabla_datasets_no_declarados = pd.DataFrame({'Datasets no declarados': ['-']})
     else:
         tabla_datasets_no_declarados = pd.DataFrame({'Datasets no declarados': datasets_no_declarados})
+    tabla_datasets_no_declarados = make_table(df=tabla_datasets_no_declarados, bold_cols=True)
 
     if len(datasets_no_cargados) == 0:
         tabla_datasets_no_cargados =   pd.DataFrame({'Datasets no cargados': ['-']})
     else:
         tabla_datasets_no_cargados =   pd.DataFrame({'Datasets no cargados': datasets_no_cargados})
+    tabla_datasets_no_cargados = make_table(df=tabla_datasets_no_cargados, bold_cols=True)
 
     if len(scripts_declarados) == 0:
         tabla_scripts_no_declarados = pd.DataFrame({'Scripts no declarados': ['-']})
     else:
         tabla_scripts_no_declarados = pd.DataFrame({'Scripts no declarados': scripts_no_declarados})
-    
+    tabla_scripts_no_declarados = make_table(df=tabla_scripts_no_declarados, bold_cols=True)
+
     if len(scripts_no_cargados) == 0:
         tabla_scripts_no_cargados   = pd.DataFrame({'Scripts no cargados': ['-']})
     else:
         tabla_scripts_no_cargados   = pd.DataFrame({'Scripts no cargados': scripts_no_cargados})
+    tabla_scripts_no_cargados = make_table(df=tabla_scripts_no_cargados, bold_cols=True)
 
     resumen = {
         'cant_graficos' : cant_graficos, #ok
@@ -96,7 +126,9 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
         fuentes.append(fuente)
         instituciones.append(institucion)
 
-    fuentes = pd.DataFrame({'Fuente': fuentes, 'Institución': instituciones})
+    fuentes_df = pd.DataFrame({'Fuente': fuentes, 'Institución': instituciones})
+    fuentes_df = make_table(df = fuentes_df, bold_cols=True)
+    
 
     # TODO: falta traerse el output de verificación completitud para 
     # poder enchufarle a template_metadatos_incompletos.md
@@ -106,7 +138,7 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
     if len(datasets_interseccion) > 0:
         datasest_verificados_df = pd.DataFrame({'Datasets Verificados' : list(datasets_interseccion)})
           
-
+    datasest_verificados_df = make_table(df = datasest_verificados_df, bold_cols=True)
 
 
     resumenes_ds = list()
@@ -169,6 +201,8 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
         else:
             tipo_dato_df = pd.DataFrame([('-','-','-')], columns = ['Variable Nombre','Tipo de Dato Efectivo', 'Tipo de Dato Declarado'])
 
+        tipo_dato_df = make_table(df = tipo_dato_df, bold_cols=True)
+
         # Caracteres especiales 
         caracters_ok, result =  quality_checks_['special_characters'] # acá el booleano quedó al revés, hay que arreglar en el codigo de verificadores. 
 
@@ -190,11 +224,13 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
         else: 
             caracteres_especiales_df = pd.DataFrame([('-','-','-')], columns=['Variable Nombre', 'Cadena con caracteres especiales','Filas'])
         
+        caracteres_especiales_df = make_table(df = caracteres_especiales_df, bold_cols=True)
+        
         quality_checks = {
                 'tidy_data': 'No se pudo hacer debido a un error' if 'tidy_data' not in quality_checks_.keys() else 'OK' if quality_checks_['tidy_data'] else \
                     'Es posible que no tenga formato `long`, analizar archivo. Por favor completar [aquí]() si el dataset se encuentra o no'
                     'en formato `long` para poder tomarlo en cuenta en un futuro reporte. En caso de que esté en formato `wide` por favor corregir el archivo',
-                'duplicates': 'No se pudo hacer debido a un error' if 'duplicates' not in quality_checks_.keys() else 'OK' if quality_checks_['duplicates'] else 'Se encontraron filas duplicadas en el dataset, para las variables definidas como claves.',
+                'duplicates': 'No se pudo hacer debido a un error' if 'duplicates' not in quality_checks_.keys() else 'OK' if quality_checks_['duplicates']==False else 'Se encontraron filas duplicadas en el dataset, para las variables definidas como claves.',
                 'nullity_check': 'No se pudo realizar debido a un error.' if isinstance(quality_checks_['nullity_check'], tuple) else 'OK' if quality_checks_['nullity_check'] is True else 'Se encontraron valores nulos para las variables definidas como NOT NULLABLE',
                 'header': 'OK' if quality_checks_['header'][0] is True else 'Se encontraron columnas con nombres mal formateados ver [documentación]((https://docs.google.com/document/d/1vH59Akk1eZTb0m4wIyEdhyVV_rx2q8lg4bG5k2tJP20/edit?usp=sharing))',
                 'special_characters': 'OK' if quality_checks_['special_characters'][0] else 'Hay columnas que poseen caracteres raros, ver detalle abajo.',
@@ -217,6 +253,7 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
         metadatos_incompletos = metadatos_incompletos_
 
     metadatos_incompletos = pd.DataFrame.from_dict(metadatos_incompletos)
+    metadatos_incompletos = make_table(df = metadatos_incompletos, bold_cols=True, wrap_text=True, wrapped_cols=['dataset_archivo'], max_width=20)
 
     params = [('./argendata/reporter/templates/template_gutter.md', file(f'./output/render-{subtopico}/gutter.md')),
                  ('./argendata/reporter/templates/template_resumen.md', file(f'./output/render-{subtopico}/resumen.md')),
@@ -229,7 +266,7 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
 
     templates = list(map(lambda x: generate_template(*x), params))
 
-    datos_template = [gutter, resumen, fuentes, metadatos_incompletos, datasest_verificados_df, *resumenes_ds] 
+    datos_template = [gutter, resumen, fuentes_df, metadatos_incompletos, datasest_verificados_df, *resumenes_ds] 
 
     # O bien fs es functorialmente aplicativo sobre xs,
     # o bien uso una lista zippeable (Que es en si misma un functor aplicativo)
