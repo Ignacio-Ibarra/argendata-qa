@@ -118,7 +118,7 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
         resumen_ds = {
             'nombre': dataset_name,
             'encoding': encoding,
-            'encoding_resultado': 'OK' if encoding in ENCODINGS_VALIDOS else f"Encoding inválido. Tuvo que haber sido uno de estos: {', '.join(ENCODINGS_VALIDOS)}",
+            'encoding_resultado': 'OK' if encoding in ENCODINGS_VALIDOS else f"Encoding inválido. Debería ser: {', '.join(ENCODINGS_VALIDOS)}",
             'delimiter': delimiter,
             'delimiter_resultado': 'OK' if delimiter == ',' else f"Delimiter inválido. El delimiter siempre debe ser ','",
         }
