@@ -213,8 +213,11 @@ class ControlSubtopico:
         df = read_csv(path, delimiter=delimiter, encoding=encoding)
         df.columns = df.columns.map(lambda x: x.strip())
 
-        if set(df.columns) != set(variables.to_list()):
-            partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, len(variables.to_list()), len(df.columns.to_list())))
+        expected = set(map(lambda x: x.strip(), variables.to_list()))
+        got = set(df.columns)
+
+        if got != expected:
+            partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, len(expected), len(got)))
             return partial_result
 
         keys = variables.loc[plantilla.primary_key == True]
