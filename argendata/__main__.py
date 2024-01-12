@@ -18,37 +18,17 @@ def generate_template(template_path: str, filepath: str):
             fp.write(env.template.render(data=data))
     return curry_data
 
-def main(subtopico: str, entrega: int):
-    log = LoggerFactory.getLogger('main')
-    auth = GAuth.authenticate()
-    drive = GDrive(auth)
-
-    verificaciones = qa.analyze(subtopico, entrega=entrega)
-    now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
-    today_str = now_timestamp.strftime("%d/%m/%Y")
-
-    verificaciones['fecha'] = today_str
-    verificaciones['subtopico'] = subtopico
-
-    pp = pprint.PrettyPrinter(indent=4)
-    #  pp.pprint(verificaciones)
-
-    output_filename = './output/result-'+subtopico+"-"+timeformat(now_timestamp)+'.json'
-
-    with open(file(output_filename), 'w') as fp:
-        json.dump(obj=verificaciones, indent=4, fp=fp)
-
-    log.info(f'Reporte para {subtopico} generado en {output_filename}')
-
+def generate_report(subtopico, date, verificaciones: dict): # template_path: str, output_path: str
     # TODO:
     # Todo esto pertenece a otra parte del programa (quiza reporter_fachada, pero puede llamarse distinto)
     # Esta aca ahora para poder hacer los reportes. La logica se puede simplificar mucho, junto con cambiar
     # los outputs de las verificaciones para minimizar el tamaño del reporte crudo, y tambien minimizar
     # la cantidad de postprocesamiento (decompresion) de la info del mismo.
+    log = LoggerFactory.getLogger(f'report_generator<{subtopico}>')
 
     gutter = {
         'subtopico' : subtopico, #ok
-        'fecha_verificacion' : today_str #ok
+        'fecha_verificacion' : date #ok
     }
 
 
@@ -262,6 +242,30 @@ def main(subtopico: str, entrega: int):
 
 
     log.debug(len(datos_template))
+
+def main(subtopico: str, entrega: int):
+    log = LoggerFactory.getLogger('main')
+    auth = GAuth.authenticate()
+    drive = GDrive(auth)
+
+    verificaciones = qa.analyze(subtopico, entrega=entrega)
+    now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
+    today_str = now_timestamp.strftime("%d/%m/%Y")
+
+    verificaciones['fecha'] = today_str
+    verificaciones['subtopico'] = subtopico
+
+    #  pp = pprint.PrettyPrinter(indent=4)
+    #  pp.pprint(verificaciones)
+
+    output_filename = './output/result-'+subtopico+"-"+timeformat(now_timestamp)+'.json'
+
+    with open(file(output_filename), 'w') as fp:
+        json.dump(obj=verificaciones, indent=4, fp=fp)
+
+    log.info(f'Reporte para {subtopico} generado en {output_filename}')
+
+    generate_report(subtopico, today_str, verificaciones)
 
 
 
