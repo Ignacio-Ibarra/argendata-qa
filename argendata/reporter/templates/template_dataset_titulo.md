@@ -13,7 +13,6 @@ significa que los conjuntos no tienen ningún elemento en común.
 {{data.to_markdown(index=False)}}
 
 
-***
 ### Acerca de los controles realizados
 
 Comentamos brevemente los controles realizados. 
@@ -33,4 +32,4 @@ que los datos se presenten de manera `long` para que el dataset tenga una estruc
 *   **Caracteres raros**: para todas las columnas cuyo tipo de dato sea una cadena de carcteres se verifica que no se encuentren caracteres raros. En los casos en que el dataset pueda ser leído, pero de manera defectuosa el informe reportará `Error`. 
 
 
-***
+
