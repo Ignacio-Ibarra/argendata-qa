@@ -46,6 +46,14 @@ class ControlCSV:
             self.delimiter = str(csv.Sniffer().sniff(csvfile.read()).delimiter)
         return self.delimiter
 
+class BadColumnsException(ValueError):
+    def __init__(self, __object: str, __expected, __got) -> None:
+        self.object = __object
+        self.expected = __expected
+        self.got = __got
+    
+    def __str__(self) -> str:
+        return f'BadColumnsException: Expected {self.expected} columns, got {self.got} columns for {self.object}'
 
 @Verifica[Subtopico]
 class ControlSubtopico:
@@ -189,79 +197,104 @@ class ControlSubtopico:
 
         return completitud.empty, resultado_info, completitud.to_dict()
 
+    def verificar_dataset(self, dataset: GFile, plantilla: DataFrame):
+        partial_result = dict()
+        variables = plantilla.loc[:, 'variable_nombre']
+
+        path = dataset.download(f'./tmp/{dataset.DEFAULT_FILENAME}')
+
+        resultados_csv = ControlCSV(dataset.title, path).verificar_todo()
+
+        encoding = resultados_csv['verificacion_encoding']
+        delimiter = resultados_csv['verificacion_delimiter']
+        partial_result['detected_encoding'] = encoding
+        partial_result['delimiter'] = delimiter
+
+        df = read_csv(path, delimiter=delimiter, encoding=encoding)
+        df.columns = df.columns.map(lambda x: x.strip())
+
+        if set(df.columns) != set(variables.to_list()):
+            partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, len(variables.to_list()), len(df.columns.to_list())))
+            return partial_result
+
+        keys = variables.loc[plantilla.primary_key == True]
+        keys = keys.str.strip().to_list()
+
+        not_nullable = variables.loc[plantilla.nullable == False]
+        not_nullable = not_nullable.str.strip().to_list()
+
+        diccionario = {
+            # 'tidy_data': keys,
+            'variables': (plantilla, ),
+            # 'duplicates': keys,
+            # 'nullity_check': not_nullable,
+            'header': (df.columns, ),
+            'special_characters': ...
+        }
+
+        flags_errores = {}
+
+        if len(keys) > 0:
+            diccionario['tidy_data'] = diccionario['duplicates'] = keys
+
+        set_nn = set(not_nullable)
+        set_cs = set(df.columns)
+        intersect_columnas = set_nn.intersection(set_cs)
+        
+        if intersect_columnas == set(not_nullable):
+            diccionario['nullity_check'] = not_nullable if len(not_nullable) > 0 else (not_nullable, )
+        else:
+            flags_errores['nullity_check'] = (None, list(set_nn), list(set_cs))
+        
+        ensure_quality = make_controls(diccionario)
+
+        quality_analysis = ensure_quality(df)
+        
+        for k,v in flags_errores.items():
+            quality_analysis[k] = v
+        
+        partial_result['quality_checks'] = quality_analysis
+        return partial_result
+    
+    def error_handler(self, e: Exception, x):
+            if isinstance(e, UnicodeDecodeError):
+                self.log.error(f"No se pudo abrir {x.title}")
+                self.log.error(str(e))
+            if isinstance(e, ParserError):
+                if re.match(pattern=".*Expected .* fields in line .* saw .*", string=str(e)):
+                    self.log.critical("Error en "+x.title)
+                    self.log.critical(str(e))
+            if isinstance(e, BadColumnsException):
+                self.log.error("Error en "+x.title)
+                self.log.error(f'Columnas mal formadas en {x}')
+            
+            return str(e)
+
     def verificacion_datasets(self, a_verificar):
         csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)
         result = dict()
+        errors = []
         for x in csvs:
-            partial_result = dict()
             slice_plantilla = a_verificar.plantilla.loc[a_verificar.plantilla.dataset_archivo == x.title]
-            variables = slice_plantilla.loc[:, 'variable_nombre']
-
-            path = x.download(f'./tmp/{x.DEFAULT_FILENAME}')
-
+            partial_result: dict
             try:
-                resultados_csv = ControlCSV(x.title, path).verificar_todo()
-            except UnicodeDecodeError as e:
-                self.log.error(f"No se pudo abrir {x.title}")
-                self.log.error(str(e))
-                continue
+                partial_result = self.verificar_dataset(x, slice_plantilla)
 
-            encoding = resultados_csv['verificacion_encoding']
-            delimiter = resultados_csv['verificacion_delimiter']
-            partial_result['detected_encoding'] = encoding
-            partial_result['delimiter'] = delimiter
+                if 'errors' in partial_result:
+                    for error in partial_result['errors']:
+                        self.log.error(str(error))
+                        partial_result['errors'] = str(error)
+                    errors.append((x.title, partial_result['errors']))
 
-            try:
-                df = read_csv(path, delimiter=delimiter, encoding=encoding)
-            except ParserError as e:
-                if re.match(pattern=".*Expected .* fields in line .* saw .*", string=str(e)):
-                    self.log.error(str(e))
-                    continue
-
-            df.columns = df.columns.map(lambda x: x.strip())
-
-            if set(df.columns) != set(variables.to_list()):
-                self.log.error(f'Columnas mal formadas en {x}')
                 result[x.title] = partial_result
-                continue
+            except Exception as e:
+                errors.append((x.title, str(e)))
+        
+        if len(errors) > 0:
+            print()
+            self.log.error("Los siguientes datasets tuvieron errores:")
+            for error in errors:
+                self.log.error("\t"+error[0])
+            print()
 
-            keys = variables.loc[slice_plantilla.primary_key == True]
-            keys = keys.str.strip().to_list()
-
-            not_nullable = variables.loc[slice_plantilla.nullable == False]
-            not_nullable = not_nullable.str.strip().to_list()
-
-            diccionario = {
-                # 'tidy_data': keys,
-                'variables': (slice_plantilla, ),
-                # 'duplicates': keys,
-                # 'nullity_check': not_nullable,
-                'header': (df.columns, ),
-                'special_characters': ...
-            }
-
-            flags_errores = {}
-
-            if len(keys) > 0:
-                diccionario['tidy_data'] = diccionario['duplicates'] = keys
-
-            set_nn = set(not_nullable)
-            set_cs = set(df.columns)
-            intersect_columnas = set_nn.intersection(set_cs)
-            
-            if intersect_columnas == set(not_nullable):
-                diccionario['nullity_check'] = not_nullable if len(not_nullable) > 0 else (not_nullable, )
-            else:
-                flags_errores['nullity_check'] = (None, list(set_nn), list(set_cs))
-            
-            ensure_quality = make_controls(diccionario)
-
-            quality_analysis = ensure_quality(df)
-            
-            for k,v in flags_errores.items():
-                quality_analysis[k] = v
-
-            partial_result['quality_checks'] = quality_analysis
-            result[x.title] = partial_result
-
-        return result
+        return result#, errors
