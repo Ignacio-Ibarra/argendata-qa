@@ -18,13 +18,12 @@ def generate_template(template_path: str, filepath: str):
             fp.write(env.template.render(data=data))
     return curry_data
 
-def main():
+def main(subtopico: str, entrega: int):
     log = LoggerFactory.getLogger('main')
     auth = GAuth.authenticate()
     drive = GDrive(auth)
-    
-    subtopico = 'COMEXT'
-    verificaciones = qa.analyze(subtopico, entrega=1)
+
+    verificaciones = qa.analyze(subtopico, entrega=entrega)
     now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
     today_str = now_timestamp.strftime("%d/%m/%Y")
 
