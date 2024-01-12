@@ -143,7 +143,7 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
 
     resumenes_ds = list()
     ENCODINGS_VALIDOS = ('utf-8', 'UTF-8', 'utf_8')
-    for (dataset_name,chequeos) in verificaciones['verificacion_datasets'].items():
+    for (dataset_name,chequeos) in verificaciones['verificacion_datasets'][0].items():
         encoding = chequeos['detected_encoding']
         delimiter = chequeos['delimiter']
 
