@@ -53,7 +53,7 @@ class BadColumnsException(ValueError):
         self.got = __got
     
     def __str__(self) -> str:
-        return f'BadColumnsException: Expected {self.expected} columns, got {self.got} columns for {self.object}'
+        return f'BadColumnsException: Expected {self.expected}, got {self.got} for {self.object}'
 
 @Verifica[Subtopico]
 class ControlSubtopico:
@@ -217,8 +217,9 @@ class ControlSubtopico:
         got = set(df.columns)
 
         if got != expected:
-            partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, len(expected), len(got)))
-            return partial_result
+            partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, (expected), (got)))
+            if len(got) != len(expected):
+                return partial_result
 
         keys = variables.loc[plantilla.primary_key == True]
         keys = keys.str.strip().to_list()
