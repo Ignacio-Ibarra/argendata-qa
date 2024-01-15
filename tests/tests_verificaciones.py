@@ -71,41 +71,6 @@ class TestVerificacionNivelRegistro(TestCase):
         self.assertEqual(result, (3, [1,2,3]))
 
 
-#  class TestVerificacionVariables(TestCase):
-#      def setUp(self):
-#          self.declarados = pd.DataFrame({
-#              'dataset_archivo': ['file1', 'file1'],
-#              'variable_nombre': ['var1', 'var2'],
-#              'tipo_dato': ['float64', 'object']
-#          })
-#  
-#          self.filename = 'file1'
-#  
-#      def test_ok(self):
-#          df = pd.DataFrame({
-#              'var1': [1.0, 2.0, 3.0],
-#              'var2': ['a', 'b', 'c']
-#          })
-#          result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
-#          self.assertTrue(result)
-#  
-#      def test_tipos_erroneos(self):
-#          df = pd.DataFrame({
-#              'var1': ["1", "2", "3"],
-#              'var2': ['a', 'b', 'c']
-#          })
-#          result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
-#          self.assertFalse(result)
-#  
-#      def test_variables_erroneas(self):
-#          df = pd.DataFrame({
-#              'var1': ["1", "2", "3"],
-#              'var3': ['a', 'b', 'c']
-#          })
-#          result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
-#          self.assertFalse(result)
-
-
 class TestVerificacionCompletitud(TestCase):
     def setUp(self):
         self.plantilla = pd.DataFrame({
