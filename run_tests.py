@@ -1,4 +1,5 @@
 import unittest
+import tests.tests_controles_calidad
 
 loader = unittest.TestLoader()
 start_dir = "./tests"

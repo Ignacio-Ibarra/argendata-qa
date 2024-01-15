@@ -14,7 +14,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'fuente_nombre': ['m', 'n', 'o'],
             'institucion': ['p', 'q', 'r']
         })
-        self.assertIsNone(ControlSubtopico.verificar_nivel_registro(df))
+
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (3, []))
 
     def test_un_duplicado(self):
         df = pd.DataFrame({
@@ -25,8 +27,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'url_path': ['j', 'j', 'k'],
             'fuente_nombre': ['m', 'm', 'n'],
             'institucion': ['p', 'p', 'q']
-        })
-        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1')
+        })      
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (2, [1]))
 
     def test_vacio(self):
         df = pd.DataFrame({
@@ -37,8 +40,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'url_path': [],
             'fuente_nombre': [],
             'institucion': []
-        })
-        self.assertIsNone(ControlSubtopico.verificar_nivel_registro(df))
+        })      
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (0, []))
 
     def test_todos_duplicados(self):
         df = pd.DataFrame({
@@ -49,8 +53,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'url_path': ['j', 'j', 'j'],
             'fuente_nombre': ['m', 'm', 'm'],
             'institucion': ['p', 'p', 'p']
-        })
-        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1')
+        })      
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (1, [1]))
 
     def test_multiples_duplicados(self):
         df = pd.DataFrame({
@@ -61,8 +66,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'url_path': ['url1', 'url2', 'url3', 'url1', 'url2', 'url3'],
             'fuente_nombre': ['fuente1', 'fuente2', 'fuente3', 'fuente1', 'fuente2', 'fuente3'],
             'institucion': ['inst1', 'inst2', 'inst3', 'inst1', 'inst2', 'inst3']
-        })
-        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1, 2, 3')
+        })      
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (3, [1,2,3]))
 
 
 #  class TestVerificacionVariables(TestCase):
