@@ -83,7 +83,7 @@ class TestControlesCalidad(unittest.TestCase):
     #          result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
     #          self.assertFalse(result)
 
-    def _test_uninmplemented(self):
+    def test_uninmplemented(self):
         uninmplemented = []
 
         for control in controles:
