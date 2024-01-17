@@ -12,6 +12,13 @@ from .utils.logger import LoggerFactory
 from .reporter import JinjaEnv
 from pandas import DataFrame
 import pandas as pd
+def complete(list1, list2):
+    max_length = max(len(list1), len(list2))
+
+    list1.extend([''] * (max_length - len(list1)))
+    list2.extend([''] * (max_length - len(list2)))
+
+    return list1, list2
 
 def bold_fmt(s:str)->str:
     return f"**{s}**"
@@ -154,6 +161,32 @@ def generate_report(subtopico, date, verificaciones: dict): # template_path: str
             'delimiter': delimiter,
             'delimiter_resultado': 'OK' if delimiter == ',' else f"Delimiter inválido. El delimiter siempre debe ser ','",
         }
+
+        if 'errors' not in chequeos:
+            resumen_ds['columnas_errores'] = DataFrame([('-', '-')], columns=['Declaradas Faltantes', 'Sin Declarar'])
+        else:
+            errores = chequeos.get('errors')
+            columnas_errores = filter(lambda e: 'BadColumnsException' in e, errores)
+            columna_errores: str = next(columnas_errores)
+
+            start_index = columna_errores.find('{')
+            end_index = columna_errores.find('}')
+            decl_no_efvo = columna_errores[start_index:end_index+1]
+
+            start_index = columna_errores.find('{', start_index+1)
+            end_index = columna_errores.find('}', end_index+1)
+            efvo_no_decl = columna_errores[start_index:end_index+1]
+
+            decl_no_efvo = decl_no_efvo[1:-1].split(', ')
+            decl_no_efvo = list(map(lambda x: str(x[1:-1]), decl_no_efvo))
+
+            efvo_no_decl = efvo_no_decl[1:-1].split(', ')
+            efvo_no_decl = list(map(lambda x: str(x[1:-1]), efvo_no_decl))
+
+            decl_no_efvo, efvo_no_decl = complete(decl_no_efvo, efvo_no_decl)
+            __data = list(zip(decl_no_efvo, efvo_no_decl))
+
+            resumen_ds['columnas_errores'] = DataFrame(__data, columns=['Declaradas Faltantes', 'Sin Declarar'])
 
         ##  Armo data de los Datasets
 
