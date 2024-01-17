@@ -1,5 +1,5 @@
 import csv
-from typing import TextIO
+from typing import TextIO, Iterable
 from pandas import DataFrame, read_csv
 from pandas.errors import ParserError
 import numpy as np
@@ -47,13 +47,23 @@ class ControlCSV:
         return self.delimiter
 
 class BadColumnsException(ValueError):
-    def __init__(self, __object: str, __expected, __got) -> None:
+    def __init__(self, __object: str, __expected: Iterable[str], __got: Iterable[str]) -> None:
         self.object = __object
-        self.expected = __expected
-        self.got = __got
+        self.expected = set(__expected)
+        self.got = set(__got)
     
     def __str__(self) -> str:
-        return f'BadColumnsException: Expected {self.expected}, got {self.got} for {self.object}'
+        declarado_no_efvo = self.expected - self.got
+        efvo_no_declarado = self.got - self.expected
+
+        result = f'BadColumnsException: {self.object}'
+        if declarado_no_efvo:
+            result += f'\n\tThe following columns are in the template, but not in the dataset: {declarado_no_efvo}'
+
+        if efvo_no_declarado:
+            result += f'\n\tThe following columns are in the dataset, but not in the template {efvo_no_declarado}'
+
+        return result
 
 @Verifica[Subtopico]
 class ControlSubtopico:
