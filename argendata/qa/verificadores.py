@@ -298,9 +298,10 @@ class ControlSubtopico:
                 partial_result = self.verificar_dataset(x, slice_plantilla)
 
                 if 'errors' in partial_result:
-                    for error in partial_result['errors']:
+                    for i, error in enumerate(partial_result['errors']):
                         self.log.error(str(error))
-                        partial_result['errors'] = str(error)
+                        partial_result['errors'][i] = str(error)
+                        # partial_result.setdefault('errors', []).append(str(error))
                     errors.append((x.title, partial_result['errors']))
 
                 result[x.title] = partial_result
