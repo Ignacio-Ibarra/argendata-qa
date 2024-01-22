@@ -14,7 +14,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'fuente_nombre': ['m', 'n', 'o'],
             'institucion': ['p', 'q', 'r']
         })
-        self.assertIsNone(ControlSubtopico.verificar_nivel_registro(df))
+
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (3, []))
 
     def test_un_duplicado(self):
         df = pd.DataFrame({
@@ -25,8 +27,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'url_path': ['j', 'j', 'k'],
             'fuente_nombre': ['m', 'm', 'n'],
             'institucion': ['p', 'p', 'q']
-        })
-        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1')
+        })      
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (2, [1]))
 
     def test_vacio(self):
         df = pd.DataFrame({
@@ -37,8 +40,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'url_path': [],
             'fuente_nombre': [],
             'institucion': []
-        })
-        self.assertIsNone(ControlSubtopico.verificar_nivel_registro(df))
+        })      
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (0, []))
 
     def test_todos_duplicados(self):
         df = pd.DataFrame({
@@ -49,8 +53,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'url_path': ['j', 'j', 'j'],
             'fuente_nombre': ['m', 'm', 'm'],
             'institucion': ['p', 'p', 'p']
-        })
-        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1')
+        })      
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (1, [1]))
 
     def test_multiples_duplicados(self):
         df = pd.DataFrame({
@@ -61,43 +66,9 @@ class TestVerificacionNivelRegistro(TestCase):
             'url_path': ['url1', 'url2', 'url3', 'url1', 'url2', 'url3'],
             'fuente_nombre': ['fuente1', 'fuente2', 'fuente3', 'fuente1', 'fuente2', 'fuente3'],
             'institucion': ['inst1', 'inst2', 'inst3', 'inst1', 'inst2', 'inst3']
-        })
-        self.assertEqual(ControlSubtopico.verificar_nivel_registro(df), '1, 2, 3')
-
-
-#  class TestVerificacionVariables(TestCase):
-#      def setUp(self):
-#          self.declarados = pd.DataFrame({
-#              'dataset_archivo': ['file1', 'file1'],
-#              'variable_nombre': ['var1', 'var2'],
-#              'tipo_dato': ['float64', 'object']
-#          })
-#  
-#          self.filename = 'file1'
-#  
-#      def test_ok(self):
-#          df = pd.DataFrame({
-#              'var1': [1.0, 2.0, 3.0],
-#              'var2': ['a', 'b', 'c']
-#          })
-#          result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
-#          self.assertTrue(result)
-#  
-#      def test_tipos_erroneos(self):
-#          df = pd.DataFrame({
-#              'var1': ["1", "2", "3"],
-#              'var2': ['a', 'b', 'c']
-#          })
-#          result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
-#          self.assertFalse(result)
-#  
-#      def test_variables_erroneas(self):
-#          df = pd.DataFrame({
-#              'var1': ["1", "2", "3"],
-#              'var3': ['a', 'b', 'c']
-#          })
-#          result = ControlSubtopico.verificar_variables(self.declarados, df, self.filename)
-#          self.assertFalse(result)
+        })      
+        result = ControlSubtopico.verificar_nivel_registro(df)
+        self.assertEqual(result, (3, [1,2,3]))
 
 
 class TestVerificacionCompletitud(TestCase):

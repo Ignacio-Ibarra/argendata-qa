@@ -2,6 +2,14 @@
 
 ### Dataset {{data.nombre}} 
 
+#### Control de formato -- Columnas
+
+A continuación se encuentra un detalle de las columnas que fueron declaradas en la plantilla y las que efectivamente
+se encontraron en el dataset. Si la tabla está vacía, entonces no hubo diferencias.
+Si hubo diferencias, es probable que el resto del reporte no haya podido completarse.
+
+{{data['columnas_errores'].to_markdown(index=False)}}
+
 #### Controles de codificación
 
 *   **Encoding**: el detectado es `{{data.encoding}}`. {{data.encoding_resultado}}. 
