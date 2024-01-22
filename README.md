@@ -30,12 +30,8 @@ El entry point del programa de QA es 'main.py'. Ejecuta primero los tests unitar
 
 ## Google Drive
 
-[(Ver gwrappers/)](./src/gwrappers/)
+[(Ver gwrappers/)](./argendata/utils/gwrappers/)
 
 Como los datos se bajan desde Google Drive, usamos `pydrive` para interactuar con la correspondiente API. El programa espera que en `/.auth/` haya un archivo `client_secrets.json` para autenticar la sesión. Una vez autenticada, los datos de la sesión se guardan en `client_creds.json` en la misma carpeta.
 
-Para simplificar (aún más) las interacciones que provee `pydrive`, [gwrappers](./src/gwrappers/) provee clases para manipular los recursos de Google Drive como objetos.
- 
-## Tests
-
-Los tests unitarios están para asegurar que el código siga funcionando después de cualquier cambio. Las carpetas `src/` y `test/` deberían compartir la misma estructura, para que así los tests de una clase estén en la misma ruta relativa dentro de test (y viceversa con su implementación).
+Para simplificar (aún más) las interacciones que provee `pydrive`, [gwrappers](./argendata/utils/gwrappers/) provee clases para manipular los recursos de Google Drive como objetos.
