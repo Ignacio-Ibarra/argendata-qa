@@ -14,15 +14,15 @@ contrastando lo que efectivamente fue cargado en él con lo declarado en la Plan
 ### Resumen
 
 
-- Cantidad de gráficos ingresados en la plantilla de metadatos: {{data['cant_graficos']}} 
+- Cantidad de gráficos ingresados en la plantilla de metadatos: {{cant_graficos}} 
 
 
-- Registros duplicado en plantilla: {{data.string_errores_graficos}}
+- Registros duplicado en plantilla: {{string_errores_graficos}}
 
 En la siguiente tabla se resume el contenido encontrado dentro de la carpeta de `GoogleDrive` y lo declarado en la Plantlla de Metadatos.
 
 
-{{data.tabla_resumen.to_markdown()}}
+{{tabla_resumen.to_markdown()}}
 
 
 *   **Cargados**: datasets o scripts que se encontraron en GoogleDrive.
@@ -41,7 +41,7 @@ En la tabla a continuación se detallan los datasets que aparecen en la plantill
 Si la tabla se encuentra vacía significa que no se han encontrado errores. 
 
 
-{{data.tabla_datasets_no_cargados.to_markdown(index = False)}}
+{{tabla_datasets_no_cargados.to_markdown(index = False)}}
 
 
 #### Datasets no declarados
@@ -50,7 +50,7 @@ Datasets que se encuentran en `GoogleDrive` pero no en la plantilla de metadatos
 Si la tabla se encuentra vacía significa que no se han encontrado errores.
 
 
-{{data.tabla_datasets_no_declarados.to_markdown(index = False)}}
+{{tabla_datasets_no_declarados.to_markdown(index = False)}}
 
 
 #### Scripts no cargados
@@ -59,7 +59,7 @@ Scripts que aparecen en la plantilla de metadatos, pero no se encuentran en `Goo
 se encuentra vacía significa que no se han encontrado errores.
 
 
-{{data.tabla_scripts_no_cargados.to_markdown(index = False)}}
+{{tabla_scripts_no_cargados.to_markdown(index = False)}}
 
 
 #### Scripts no declarados
@@ -68,6 +68,6 @@ Scripts que se encuentran en `GoogleDrive` pero no en la plantilla de metadatos.
 se encuentra vacía significa que no se han encontrado errores.
 
 
-{{data.tabla_scripts_no_declarados.to_markdown(index = False)}}
+{{tabla_scripts_no_declarados.to_markdown(index = False)}}
 
 

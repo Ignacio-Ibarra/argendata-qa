@@ -1,13 +1,13 @@
 ---
-title: Reporte {{data.subtopico}}
+title: Reporte {{subtopico}}
 subtitle: Proyecto ArgenData
 author: Fundar
 institute: Fundar
-date: {{data.fecha_verificacion}}
+date: {{fecha_verificacion}}
 # toc: true
 # toc-title: Contenidos
 
-title-meta: Reporte ArgenData {{data.subtopico}}
+title-meta: Reporte ArgenData {{subtopico}}
 author-meta: Fundar
 subject: ArgenData
 keywords: Fundar, ArgenData, Argendata, reporte, Reporte, calidad, datos
