@@ -1,6 +1,6 @@
 
 
-## CONTROLES EN DATASETS
+# CONTROLES EN DATASETS
 
 En esta sección se detallan los controles realizados sobre los datasets. 
 Dichos controles verifican el cumplimiento de los estándares determinados en la documentación: 
@@ -13,7 +13,7 @@ significa que los conjuntos no tienen ningún elemento en común.
 {{data.to_markdown(index=False)}}
 
 
-### Acerca de los controles realizados
+## Acerca de los controles realizados
 
 Comentamos brevemente los controles realizados. 
 
