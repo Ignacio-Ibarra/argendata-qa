@@ -224,7 +224,9 @@ class ControlSubtopico:
         df.columns = df.columns.map(lambda x: x.strip())
 
         expected = set(map(lambda x: x.strip(), variables.to_list()))
+        self.log.debug(f'Columnas esperadas = {expected}')
         got = set(df.columns)
+        self.log.debug(f'Columnas encontradas = {got}')
 
         if got != expected:
             partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, (expected), (got)))
@@ -292,7 +294,7 @@ class ControlSubtopico:
             if 'geojson' in x.title.lower():
                 self.log.info(f'Salteando {x.title} por ser GeoJSON')
                 continue
-            slice_plantilla = a_verificar.plantilla.loc[a_verificar.plantilla.dataset_archivo == x.title]
+            slice_plantilla = a_verificar.plantilla.loc[a_verificar.plantilla.dataset_archivo.str.strip() == x.title]
             partial_result: dict
             try:
                 partial_result = self.verificar_dataset(x, slice_plantilla)
