@@ -6,12 +6,12 @@ Para que el reporte pueda realizarse de manera acabada, es necesario que se cump
 
 ***
 
-## Sistema de archivos
+# CONTROL SISTEMA DE ARCHIVOS
 
 En esta sección se detalla la verificación de la carga en el sistema de archivos, 
 contrastando lo que efectivamente fue cargado en él con lo declarado en la Plantilla de Metadatos.
 
-### Resumen
+## Resumen
 
 
 - Cantidad de gráficos ingresados en la plantilla de metadatos: {{cant_graficos}} 
@@ -31,11 +31,11 @@ En la siguiente tabla se resume el contenido encontrado dentro de la carpeta de 
 *   **No cargados**: datasets o scripts que estaban en la plantilla de metadatos pero no en GoogleDrive
 *   **No declarados**: datasets o scripts que estaban en GoogleDrive pero no en la plantilla de metadatos
 
-### Errores
+## Errores
 
 Aquí se detallan los datasets/scripts no cargados o no declarados. 
 
-#### Datasets no cargados
+### Datasets no cargados
 
 En la tabla a continuación se detallan los datasets que aparecen en la plantilla de metadatos, pero no se encuentran en `GoogleDrive`.
 Si la tabla se encuentra vacía significa que no se han encontrado errores. 
@@ -44,7 +44,7 @@ Si la tabla se encuentra vacía significa que no se han encontrado errores.
 {{tabla_datasets_no_cargados.to_markdown(index = False)}}
 
 
-#### Datasets no declarados
+### Datasets no declarados
 
 Datasets que se encuentran en `GoogleDrive` pero no en la plantilla de metadatos.
 Si la tabla se encuentra vacía significa que no se han encontrado errores.
@@ -53,7 +53,7 @@ Si la tabla se encuentra vacía significa que no se han encontrado errores.
 {{tabla_datasets_no_declarados.to_markdown(index = False)}}
 
 
-#### Scripts no cargados
+### Scripts no cargados
 
 Scripts que aparecen en la plantilla de metadatos, pero no se encuentran en `GoogleDrive`. Si la tabla
 se encuentra vacía significa que no se han encontrado errores.
@@ -62,7 +62,7 @@ se encuentra vacía significa que no se han encontrado errores.
 {{tabla_scripts_no_cargados.to_markdown(index = False)}}
 
 
-#### Scripts no declarados
+### Scripts no declarados
 
 Scripts que se encuentran en `GoogleDrive` pero no en la plantilla de metadatos. Si la tabla
 se encuentra vacía significa que no se han encontrado errores.

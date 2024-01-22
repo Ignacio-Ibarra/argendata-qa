@@ -1,6 +1,6 @@
 
 
-## Plantilla de Metadatos: datos faltantes
+# PLANTILLA METADATOS: DATOS FALTANTES
 
 En la siguiente tabla se detallan para cada dataset las columnas que poseen datos faltantes y la cantidad. 
 Recordamos que no puede haber datos faltantes en ninguna columna de la Plantilla de Metadatos.
