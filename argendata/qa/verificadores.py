@@ -1,5 +1,5 @@
 import csv
-from typing import TextIO
+from typing import TextIO, Iterable
 from pandas import DataFrame, read_csv
 from pandas.errors import ParserError
 import numpy as np
@@ -47,13 +47,23 @@ class ControlCSV:
         return self.delimiter
 
 class BadColumnsException(ValueError):
-    def __init__(self, __object: str, __expected, __got) -> None:
+    def __init__(self, __object: str, __expected: Iterable[str], __got: Iterable[str]) -> None:
         self.object = __object
-        self.expected = __expected
-        self.got = __got
+        self.expected = set(__expected)
+        self.got = set(__got)
     
     def __str__(self) -> str:
-        return f'BadColumnsException: Expected {self.expected} columns, got {self.got} columns for {self.object}'
+        declarado_no_efvo = self.expected - self.got
+        efvo_no_declarado = self.got - self.expected
+
+        result = f'BadColumnsException: {self.object}'
+        if declarado_no_efvo:
+            result += f'\n\tThe following columns are in the template, but not in the dataset: {declarado_no_efvo}'
+
+        if efvo_no_declarado:
+            result += f'\n\tThe following columns are in the dataset, but not in the template {efvo_no_declarado}'
+
+        return result
 
 @Verifica[Subtopico]
 class ControlSubtopico:
@@ -213,9 +223,13 @@ class ControlSubtopico:
         df = read_csv(path, delimiter=delimiter, encoding=encoding)
         df.columns = df.columns.map(lambda x: x.strip())
 
-        if set(df.columns) != set(variables.to_list()):
-            partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, len(variables.to_list()), len(df.columns.to_list())))
-            return partial_result
+        expected = set(map(lambda x: x.strip(), variables.to_list()))
+        got = set(df.columns)
+
+        if got != expected:
+            partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, (expected), (got)))
+            if len(got) != len(expected):
+                return partial_result
 
         keys = variables.loc[plantilla.primary_key == True]
         keys = keys.str.strip().to_list()
@@ -284,9 +298,10 @@ class ControlSubtopico:
                 partial_result = self.verificar_dataset(x, slice_plantilla)
 
                 if 'errors' in partial_result:
-                    for error in partial_result['errors']:
+                    for i, error in enumerate(partial_result['errors']):
                         self.log.error(str(error))
-                        partial_result['errors'] = str(error)
+                        partial_result['errors'][i] = str(error)
+                        # partial_result.setdefault('errors', []).append(str(error))
                     errors.append((x.title, partial_result['errors']))
 
                 result[x.title] = partial_result
@@ -300,4 +315,4 @@ class ControlSubtopico:
                 self.log.error("\t"+error[0])
             print()
 
-        return result#, errors
+        return result, errors
