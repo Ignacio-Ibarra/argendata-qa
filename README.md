@@ -1,6 +1,9 @@
 <div align="center">
-<img src="assets/argendata-logo.png" alt=""></img>
-<h4>Branch Experimental</h4>
+ <img src="assets/argendata-logo.png" alt=""></img>
+</div>
+
+<div align='center'>
+ <img src="./assets/agd-0124.gif" alt=""></img>
 </div>
 
 La idea de esta repo es continuar con el desarrollo de ArgenData (por ahora, la parte de QA) de manera más ordenada. En síntesis, tiene como objetivo principal dar estructura al proyecto para simplificar los procesos de creación y ejecución de controles sobre los datasets, haciendo que el código escale más y mejor.
