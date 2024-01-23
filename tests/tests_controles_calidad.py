@@ -1,6 +1,6 @@
 import unittest
 from pandas import DataFrame
-from argendata.qa.controles_calidad import controles, tiene_caracteres_raros
+from argendata.qa.controles_calidad import controles, tiene_caracteres_raros, check_wrong_colname
 
 class TestControlesCalidad(unittest.TestCase):
 
@@ -9,8 +9,19 @@ class TestControlesCalidad(unittest.TestCase):
     #  def test_nullity_check(self): ...
     
     #  def test_duplicates(self): ...
+
+    def test_check_wrong_colname(self):
+        valid_colnames = ['abc', 'anio', 'abc1']
+        invalid_colnames = ['1abc', 'año', '1995', 'a bc', '', ' ']
+
+        for colname in valid_colnames:
+            self.assertFalse(check_wrong_colname(colname))
+        
+        for colname in invalid_colnames:
+            self.assertTrue(check_wrong_colname(colname), f'Falló en {colname}')
+
     
-    #  def test_header(self): ...
+    # def test_header(self): ...
 
     def test_tiene_caracteres_raros(self):
         valid_words = ['Hello', 'world', 'áéíóú', 'üñôç', 'ÁÉÍÓÚ', 'ÜÑÇ', '123', 'hello_world', '(hello, world)']
