@@ -303,8 +303,8 @@ class Reporter:
 
         output_folder = file(output_folder)
         self.log.info(f"Generando reporte para {self.subtopico} en {output_folder}")
-        template_queue = []
-        outfiles = []
+        template_queue: list[Template] = []
+        outfiles: list[str] = []
 
         # Gutter
 

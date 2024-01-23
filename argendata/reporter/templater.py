@@ -22,7 +22,7 @@ def generate_template_class(template_path):
     clean_name = "".join(clean_name)
     clean_name = clean_name.replace('_', ' ').title().replace(' ', '')
     
-    result = f"@Template('./{template_path}')"
+    result = f"@template('./{template_path}')"
     result += f"\nclass {clean_name}:"
 
     for var in variables:

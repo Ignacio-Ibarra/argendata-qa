@@ -1,6 +1,9 @@
 <div align="center">
-<img src="assets/argendata-logo.png" alt=""></img>
-<h4>Branch Experimental</h4>
+ <img src="assets/argendata-logo.png" alt=""></img>
+</div>
+
+<div align='center'>
+ <img src="./assets/agd-0124.gif" alt=""></img>
 </div>
 
 La idea de esta repo es continuar con el desarrollo de ArgenData (por ahora, la parte de QA) de manera más ordenada. En síntesis, tiene como objetivo principal dar estructura al proyecto para simplificar los procesos de creación y ejecución de controles sobre los datasets, haciendo que el código escale más y mejor.
@@ -27,51 +30,8 @@ El entry point del programa de QA es 'main.py'. Ejecuta primero los tests unitar
 
 ## Google Drive
 
-[(Ver gwrappers/)](./src/gwrappers/)
+[(Ver gwrappers/)](./argendata/utils/gwrappers/)
 
 Como los datos se bajan desde Google Drive, usamos `pydrive` para interactuar con la correspondiente API. El programa espera que en `/.auth/` haya un archivo `client_secrets.json` para autenticar la sesión. Una vez autenticada, los datos de la sesión se guardan en `client_creds.json` en la misma carpeta.
 
-Para simplificar (aún más) las interacciones que provee `pydrive`, [gwrappers](./src/gwrappers/) provee clases para manipular los recursos de Google Drive como objetos.
- 
-## Tests
-
-Los tests unitarios están para asegurar que el código siga funcionando después de cualquier cambio. Las carpetas `src/` y `test/` deberían compartir la misma estructura, para que así los tests de una clase estén en la misma ruta relativa dentro de test (y viceversa con su implementación).
-
-## To-Do
-
-- [x] Agregar verificaciones para que la funcionalidad sea igual o superior a la de la [_branch_ funcional.](https://github.com/datos-Fundar/argendata). En particular, lo que queda es:
-    - Establecer qué controles deben ser `Verificadores` (y cuales pueden ser simplemente funciones).
-    - Crear los verificadores necesarios.
-    - En particular, cumplir con los siguientes controles:
-        - [x] Verificación datasets (declarados/efectivos)
-        - [x] Verifiación tipos de dato (declarados/efectivos)
-        - [x] Verificación scripts (declarados/efectivos)
-        - [x] Inspección de fuentes
-        - [x] Completitud
-        - [x] Verificación variables (declaradas/efectivas)
-        - [x] Cardinalidad
-        - [x] Nivel de registro
-        - [x] Nulos (existencia/conteo)
-        - [x] Nombres de columnas
-        - [x] Caracteres especiales
-        - [x] Long/Wide
- 
-- [ ] Pensar y escribir más testeos (unitarios o de integración), ya sea de los componentes que existen, o de los que se vayan a crear nuevos para:
-    - Tener una especificación de _cómo_ debería funcionar el código. (Aunque sea laxa)
-    - Poder medir y asegurar la calidad del código.
-
-- [x] Tener 'gwrappers' y 'utils' como globales y al resto de partes del proyecto como submódulos. (En principio, de Python, pero pueden ser de git)
-
-- [ ] Buscar algunos archivos/carpetas automáticamente para no tener problemas con la ruta al working directory y las rutas relativas.
-
-- [x] Generar un arbol de sistema de archivos (con IDs de GoogleDrive) para tener una copia local del estado del Drive.
- - [ ] Actualizar el árbol con cada solicitud, sólo en la rama correspondiente y sólo aquello que haya cambiado.
-
-- [ ] Tener los submódulos o el proyecto entero como aplicación/es de consola parametrizadas, de forma tal que se pueda llamar a los programas desde un proceso externo. Eso implica que:
-    - Los módulos ya sean objetos parametrizados que generen un resultado a través de instanciarlo con ciertos parámetros.
-    - La forma de llamar a esos módulos es simplemente instanciarlos con los parámetros que se pasan por consola.
-
-    - Nota: ésto también puede ayudar a futuro a que se cree un endpoint para subir archivos y generar el reporte de manera autónoma. (Aunque sea de un sólo dataset+plantilla).
-
-
-- [ ] Usar `pydoc` o similares para documentar automáticamente el código.
+Para simplificar (aún más) las interacciones que provee `pydrive`, [gwrappers](./argendata/utils/gwrappers/) provee clases para manipular los recursos de Google Drive como objetos.
