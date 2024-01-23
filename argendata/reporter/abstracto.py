@@ -19,7 +19,7 @@ class AbstractTemplate:
         """
         variables = {k: getattr(self, k) for k in self.__annotations__}
 
-        with open(self.template) as f:
+        with open(self.template, encoding='utf-8') as f:
             template = jinja.Template(f.read())
         
         result = template.render(**variables)
@@ -27,7 +27,7 @@ class AbstractTemplate:
         if not output:
             return result
         
-        with open(output, 'w') as f:
+        with open(output, 'w', encoding='utf-8') as f:
             f.write(result)
         
         return output
