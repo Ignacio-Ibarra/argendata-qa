@@ -24,5 +24,23 @@ mainfontoptions:
 - ItalicFont=Ubuntu-RI.ttf
 - BoldItalicFont=Ubuntu-BI.ttf
 monofont: UbuntuMono-R.ttf
+
+header-includes:
+  - \usepackage{titlesec}
+  - |
+    \titleformat{\section}[display]
+      {\normalfont\LARGE\bfseries}{\thesection}{1em}{}
+  - |
+    \titleformat{\subsection}[display]
+      {\normalfont\Large\bfseries}{\thesubsection}{1em}{}
+  - |
+    \titleformat{\subsubsection}[display]
+      {\normalfont\large\bfseries}{\thesubsubsection}{1em}{}
+  - |
+    \titleformat{\paragraph}[display]
+      {\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+  - |
+    \titleformat{\subparagraph}[display]
+      {\normalfont\small\bfseries}{\thesubparagraph}{1em}{}
 ---
 
