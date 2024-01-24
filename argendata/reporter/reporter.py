@@ -5,6 +5,7 @@ from argendata.utils.files import file
 from argendata.utils.logger import LoggerFactory
 import pandas as pd
 import os
+import json
 
 ERROR_STR = "No se pudo verificar debido a un error."
 
@@ -24,11 +25,11 @@ def make_table(df:pd.DataFrame, bold_cols:bool = False, wrap_text:bool = False, 
     
     if wrap_text:
         if wrapped_cols == None:
-            wrapped_cols = df.columns.tolist()
+            wrapped_cols = df.select_dtypes(include=['object']).columns.tolist()
         for col in wrapped_cols:
             df[col] = df[col].apply(lambda s: wrap_string(s, max_length=max_width))
 
-    df.columns = [bold_fmt(col) for col in df.columns]
+    df.columns = [bold_fmt(col) for col in df.columns.tolist()]
     return df
 
 
@@ -209,6 +210,8 @@ def unpack_qa(qa: None | dict):
 
 path_or_dict = str | dict
 
+
+
 class Reporter:
     report: dict
 
@@ -217,9 +220,10 @@ class Reporter:
         self.date = date
         self.log = LoggerFactory.getLogger(f'reporter<{subtopico}>')
         match report:
-            case json if isinstance(report, str):
+            case path if isinstance(report, str):
                 self.log.debug(f"Cargando reporte desde {report}")
-                with open(report, 'r', encoding='utf-8') as fp:
+                with open(path, 'r', encoding='utf-8') as fp:
+                    print(fp)
                     self.report = json.load(fp)
                 self.log.debug("Listo!")
             case dicc if isinstance(report, dict):
@@ -383,19 +387,19 @@ class Reporter:
 
         tabla_datasets_no_declarados = Reporter.make_list(datasets_no_declarados, 
                                                           ['Datasets no declarados'])
-        tabla_datasets_no_declarados = make_table(df=tabla_datasets_no_declarados, bold_cols=True)
+        
         
         tabla_datasets_no_cargados = Reporter.make_list(datasets_no_cargados, 
                                                         ['Datasets no cargados'])
-        tabla_datasets_no_cargados = make_table(df=tabla_datasets_no_cargados, bold_cols=True)
+        
         
         tabla_scripts_no_declarados = Reporter.make_list(scripts_no_declarados, 
                                                          ['Scripts no declarados'])
-        tabla_scripts_no_declarados = make_table(df=tabla_scripts_no_declarados, bold_cols=True)
+        
         
         tabla_scripts_no_cargados = Reporter.make_list(scripts_no_cargados, 
                                                        ['Scripts no cargados'])
-        tabla_scripts_no_cargados = make_table(df=tabla_scripts_no_cargados, bold_cols=True)
+        
 
         resumen = {
             'cant_graficos' : cant_graficos,
