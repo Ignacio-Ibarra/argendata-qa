@@ -8,9 +8,35 @@ import os
 
 ERROR_STR = "No se pudo verificar debido a un error."
 
+def bold_fmt(s:str)->str:
+    return f"**{s}**"
+
+def wrap_string(string: str, max_length: int) -> str:
+    if len(string) <= max_length:
+        return string
+    
+    prefix_suffix_length = max_length - 3
+    half_length = prefix_suffix_length // 2
+    return string[:half_length+1] + '...' + string[-half_length:]
+
+
+def make_table(df:pd.DataFrame, bold_cols:bool = False, wrap_text:bool = False, wrapped_cols:list[str]|None = None, max_width:int|None = None)->pd.DataFrame: 
+    
+    if wrap_text:
+        if wrapped_cols == None:
+            wrapped_cols = df.columns.tolist()
+        for col in wrapped_cols:
+            df[col] = df[col].apply(lambda s: wrap_string(s, max_length=max_width))
+
+    df.columns = [bold_fmt(col) for col in df.columns]
+    return df
+
+
 def empty_df(columns: list):
     """Devuelve un DataFrame vacío con las columnas especificadas."""
-    return pd.DataFrame({c: ['-'] for c in columns})
+    empty_df = pd.DataFrame({c: ['-'] for c in columns})
+    empty_df = make_table(df=empty_df, bold_cols=True)
+    return empty_df
 
 def complete(a: list, b: list) -> tuple[list, list]: # Con largos iguales
     """
@@ -61,6 +87,7 @@ def unpack_tipo_dato(qa: dict):
         
         tipo_dato_df = pd.DataFrame(data, columns = columns_variables)
     
+    tipo_dato_df = make_table(df = tipo_dato_df, bold_cols=True, wrap_text=True, max_width=40)
     return tipo_dato_df
 
 @QAUnpacker.register('header')
@@ -72,8 +99,8 @@ def unpack_header(qa: dict):
     if header_ok:
         header_result = 'OK'
     else:
-        header_result = 'Se encontraron columnas con nombres mal formateados '\
-                        'ver [documentación]((https://docs.google.com/document/d/1vH59Akk1eZTb0m4wIyEdhyVV_rx2q8lg4bG5k2tJP20/edit?usp=sharing))'
+        header_result = f'Se encontraron columnas con nombres mal formateados: [{", ".join(wrong_cols)}].'\
+                        'Ver [documentación](https://docs.google.com/document/d/1vH59Akk1eZTb0m4wIyEdhyVV_rx2q8lg4bG5k2tJP20/edit?usp=sharing) al respecto.'
     
     return header_result
 
@@ -87,8 +114,8 @@ def unpack_tidy_data(qa: dict):
         tidy_data_result = 'OK'
     else:
         tidy_data_result = \
-            'Es posible que no tenga formato `long`, analizar archivo. Por favor completar [aquí]() si el dataset se encuentra o no'
-        'en formato `long` para poder tomarlo en cuenta en un futuro reporte. En caso de que esté en formato `wide` por favor corregir el archivo',
+            'Es posible que no tenga formato `long`, analizar archivo. En caso de que el control haya arrojado un error incorrectamente'
+        'por favor informar por el canal de chat de Gmail del subtópico',
 
     return tidy_data_result
 
@@ -152,7 +179,8 @@ def unpack_special_characters(qa: dict):
                 data.append((variable, string_error, idx_str))
         
         special_characters_df = pd.DataFrame(data, columns=columns_spch)
-    
+        
+    special_characters_df = make_table(df=special_characters_df, bold_cols=True, wrap_text=True, max_width=40)
     return special_characters_result, special_characters_df
 
 def unpack_qa(qa: None | dict):
@@ -351,18 +379,23 @@ class Reporter:
                                                               'No declarados', 
                                                               'No cargados'])
         
+        tabla_resumen = make_table(df=tabla_resumen, bold_cols=True)
 
         tabla_datasets_no_declarados = Reporter.make_list(datasets_no_declarados, 
                                                           ['Datasets no declarados'])
+        tabla_datasets_no_declarados = make_table(df=tabla_datasets_no_declarados, bold_cols=True)
         
         tabla_datasets_no_cargados = Reporter.make_list(datasets_no_cargados, 
                                                         ['Datasets no cargados'])
+        tabla_datasets_no_cargados = make_table(df=tabla_datasets_no_cargados, bold_cols=True)
         
         tabla_scripts_no_declarados = Reporter.make_list(scripts_no_declarados, 
                                                          ['Scripts no declarados'])
+        tabla_scripts_no_declarados = make_table(df=tabla_scripts_no_declarados, bold_cols=True)
         
         tabla_scripts_no_cargados = Reporter.make_list(scripts_no_cargados, 
                                                        ['Scripts no cargados'])
+        tabla_scripts_no_cargados = make_table(df=tabla_scripts_no_cargados, bold_cols=True)
 
         resumen = {
             'cant_graficos' : cant_graficos,
@@ -382,6 +415,7 @@ class Reporter:
 
         fuentes, instituciones = list(zip(*self.report['verificacion_fuentes']))
         fuentes_df = pd.DataFrame({'Fuente': fuentes, 'Institución': instituciones})
+        fuentes_df = make_table(df=fuentes_df, bold_cols=True)
 
         inspeccion_fuentes = {'data': fuentes_df}
         inspeccion_fuentes = templates.InspeccionFuentes.from_dict(inspeccion_fuentes)
@@ -399,6 +433,7 @@ class Reporter:
             metadatos_incompletos = metadatos_incompletos_
 
         metadatos_incompletos_df = pd.DataFrame.from_dict(metadatos_incompletos)
+        metadatos_incompletos_df = make_table(df=metadatos_incompletos_df, bold_cols=True, wrap_text=True, max_width=40)
         metadatos_incompletos = {'data': metadatos_incompletos_df}
         metadatos_incompletos = templates.MetadatosIncompletos \
                                             .from_dict(metadatos_incompletos)
@@ -409,6 +444,7 @@ class Reporter:
 
         datasest_verificados_df = Reporter.make_list(list(datasets_interseccion), 
                                                      ['Datasets Verificados'])
+        datasest_verificados_df = make_table(df=datasest_verificados_df, bold_cols=True)
         
         dataset_titulo = {'data': datasest_verificados_df}
         dataset_titulo = templates.DatasetTitulo.from_dict(dataset_titulo)
