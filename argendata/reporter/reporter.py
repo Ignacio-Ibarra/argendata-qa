@@ -142,7 +142,7 @@ def unpack_nullity(qa: dict):
         nullity_result = 'OK'
     else:
         nullity_result = 'Se encontraron valores nulos para las variables definidas como NOT NULLABLE'
-
+ 
     return nullity_result
 
 def compress_indices(indices, threshold=10) -> str:
