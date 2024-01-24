@@ -438,7 +438,6 @@ class Reporter:
         
         if merge_to:
             merge_to = file(os.path.join(output_folder, merge_to))
-            outfiles.append(merge_to)
 
             with open(merge_to, 'w', encoding='utf-8') as merged_file: 
                 for archivo in outfiles:
@@ -446,6 +445,8 @@ class Reporter:
                         continue
 
                     merged_file.write(open(archivo, encoding='utf-8').read())
+                    
+            outfiles.append(merge_to)
             
         return outfiles
 
