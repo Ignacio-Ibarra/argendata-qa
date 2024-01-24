@@ -227,10 +227,10 @@ class Reporter:
 
     @staticmethod
     def encoding_resultado_str(encoding: str):
-        is_valid = encoding == 'utf_8'
+        is_valid = encoding == 'UTF-8'
 
         if is_valid:
-            return 'Encoding válido. (UTF-8)'
+            return 'Encoding válido.'
         else:
             return f'Encoding inválido. ({encoding}) Debería ser UTF-8.'
 
