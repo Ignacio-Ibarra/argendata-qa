@@ -12,6 +12,7 @@ from pandas import DataFrame
 import pandas as pd
 from argendata.reporter import Reporter
 from argendata.reporter.pdfexport import pandoc_export
+from argendata.freeze import generate_ids, autoajustar_columnas
 
 def bold_fmt(s:str)->str:
     return f"**{s}**"
@@ -34,30 +35,29 @@ def make_table(df:DataFrame, bold_cols:bool = False, wrap_text:bool = False, wra
     df.columns = [bold_fmt(col) for col in df.columns]
     return df
 
-def main(subtopico: str, entrega: int):
+def main(subtopico: str, entrega: int, generate_indices: bool):
     log = LoggerFactory.getLogger('main')
     auth = GAuth.authenticate()
     drive = GDrive(auth)
 
-    verificaciones = qa.analyze(subtopico, entrega=entrega)
+    verificaciones, subtopico_obj = qa.analyze(subtopico, entrega=entrega)
     now_timestamp = datetime.now(tz=pytz.timezone('America/Argentina/Buenos_Aires'))
     today_str = now_timestamp.strftime("%d/%m/%Y")
 
     verificaciones['fecha'] = today_str
     verificaciones['subtopico'] = subtopico
 
-    subtopico = subtopico + str(entrega)
-
-    outfile = subtopico+"-"+timeformat(now_timestamp)
-    outfile_path = f'./output/{subtopico}/result-'+outfile+'.json'
+    outfile = subtopico+str(entrega)+"-"+timeformat(now_timestamp)
+    outfile_path = f'./output/{subtopico+str(entrega)}/result-'+outfile+'.json'
 
     with open(file(outfile_path), 'w') as fp:
         json.dump(obj=verificaciones, indent=4, fp=fp)
 
-    log.info(f'Reporte para {subtopico} generado en {outfile_path}')
+    log.info(f'Reporte para {subtopico+str(entrega)} generado en {outfile_path}')
 
     report_generator = Reporter(subtopico, today_str, verificaciones)
-    archivos = report_generator.generar_reporte(merge_to=f"{outfile}.md")
+    archivos = report_generator.generar_reporte(output_folder=f'./output/{subtopico+str(entrega)}/',
+                                                merge_to=f"{outfile}.md")
 
     log.info("Generando reporte PDF...")
     export_result = pandoc_export(archivos[-1])
@@ -71,6 +71,11 @@ def main(subtopico: str, entrega: int):
                     log.error(line)
     else:
         log.info(f'PDF generado: {export_result}')
+    
+    if generate_indices:
+        ids = generate_ids(subtopico, subtopico_obj.plantilla)
+        pd.DataFrame(ids).to_excel(file(f'./output/{subtopico+str(entrega)}/{subtopico}.xlsx'), index=False)
+        autoajustar_columnas(f'./output/{subtopico+str(entrega)}/{subtopico}.xlsx')
 
 
 if __name__ == "__main__":
