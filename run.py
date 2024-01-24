@@ -28,6 +28,7 @@ class Parser(argparse.ArgumentParser):
         self.add_argument('-e', '--entrega', type=int, help='Entrega a analizar')
         self.add_argument('-a', '--alias', type=str, help='Alias de la entrega a analizar (Ejemplo: ABCDEF2)')
         self.add_argument('-C', '--clean-first', action='store_true', help='Borra los archivos de la entrega antes de analizarla')
+        self.add_argument('-i', '--index', action='store_true', help='Crea la tabla de índices')
 
         # Argumento de debug para poder testear los argumentos.
         # Si está, no se ejecuta el programa.
@@ -50,8 +51,8 @@ if __name__ == '__main__':
 
     subtopico = args.get('subtopico', None)
     entrega = args.get('entrega', None)
-
     alias = args.get('alias', None)
+    generate_indices = args.get('index', False)
 
     if (not subtopico and not alias) or (entrega and alias) or (subtopico and not entrega):
         print('Se debe especificar un subtopico y una entrega, o un alias')
@@ -71,9 +72,9 @@ if __name__ == '__main__':
         exit(0)
 
     clean_first = args.get('clean_first', False)
-    clean_after = args.get('clean_after', False)
 
     if clean_first:
         remove_folder_recursive(f'./output/')
         remove_folder_recursive(f'./tmp/')
-    argendata.main(subtopico, entrega)
+
+    argendata.main(subtopico, entrega, generate_indices)
