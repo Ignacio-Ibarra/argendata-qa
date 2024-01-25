@@ -1,12 +1,12 @@
 
 ***
-*NOTA INICIAL*
+#### _Nota inicial:_
 
 Para que el reporte pueda realizarse de manera acabada, es necesario que se cumpla con los criterios detallados [Estándares ArgenData para Analistas](https://docs.google.com/document/d/1JZm8BAnqNqzOITUNJi4sdjYePDHEY3nZI712BwUwAes/edit?usp=sharing). Asimismo, es de suma relevancia el guardado de los  datasets y los scripts en las carpetas correspondientes del sistema de archivos y completar de forma correcta La plantilla de metadatos, es decir que no queden registros que tengan campos incompletos.
 
 ***
 
-# CONTROL SISTEMA DE ARCHIVOS
+# Control del sistema de archivos
 
 En esta sección se detalla la verificación de la carga en el sistema de archivos, 
 contrastando lo que efectivamente fue cargado en él con lo declarado en la Plantilla de Metadatos.

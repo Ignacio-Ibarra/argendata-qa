@@ -14,9 +14,6 @@ from argendata.reporter import Reporter
 from argendata.reporter.pdfexport import pandoc_export
 from argendata.freeze import generate_ids, autoajustar_columnas
 
-def bold_fmt(s:str)->str:
-    return f"**{s}**"
-
 def wrap_string(string: str, max_length: int) -> str:
     if len(string) <= max_length:
         return string
@@ -24,16 +21,6 @@ def wrap_string(string: str, max_length: int) -> str:
     prefix_suffix_length = max_length - 3
     half_length = prefix_suffix_length // 2
     return string[:half_length+1] + '...' + string[-half_length:]
-
-
-def make_table(df:DataFrame, bold_cols:bool = False, wrap_text:bool = False, wrapped_cols:list[str]|None = None, max_width:int|None = None)->DataFrame: 
-    
-    if wrap_text:
-        for col in wrapped_cols:
-            df[col] = df[col].apply(lambda s: wrap_string(s, max_length=max_width))
-
-    df.columns = [bold_fmt(col) for col in df.columns]
-    return df
 
 def main(subtopico: str, entrega: int, generate_indices: bool):
     log = LoggerFactory.getLogger('main')

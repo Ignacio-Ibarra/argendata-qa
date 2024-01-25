@@ -1,6 +1,6 @@
 
 
-# INSPECCION DE FUENTES 
+# Inspección de fuentes
 
 La siguiente tabla provee una inspección rápida de las fuentes e instituciones utilizadas en el subtópico. 
 Es importante verificar que la lista de fuentes e instituciones que se detalla a continuación cumpla con los siguientes requisitos:

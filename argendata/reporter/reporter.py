@@ -36,7 +36,7 @@ def make_table(df:pd.DataFrame, bold_cols:bool = False, wrap_text:bool = False, 
 def empty_df(columns: list):
     """Devuelve un DataFrame vacío con las columnas especificadas."""
     empty_df = pd.DataFrame({c: ['-'] for c in columns})
-    empty_df = make_table(df=empty_df, bold_cols=True)
+    # empty_df = make_table(df=empty_df, bold_cols=True)
     return empty_df
 
 def complete(a: list, b: list) -> tuple[list, list]: # Con largos iguales
@@ -186,11 +186,11 @@ def unpack_special_characters(qa: dict):
 
 def unpack_qa(qa: None | dict):
     result = {
-        "tidy_data": "Error",
-        "header": "Error",
-        "duplicates": "Error",
-        "nullity_check": "Error",
-        "special_characters": "Error",
+        "tidy_data": ERROR_STR,
+        "header": ERROR_STR,
+        "duplicates": ERROR_STR,
+        "nullity_check": ERROR_STR,
+        "special_characters": ERROR_STR,
         "tipo_datos": pd.DataFrame(),
         "detalle_caracteres_especiales": pd.DataFrame()
     }
@@ -236,7 +236,7 @@ class Reporter:
         if is_valid:
             return 'Encoding válido.'
         else:
-            return f'Encoding inválido. ({encoding}) Debería ser UTF-8.'
+            return f'Encoding inválido. Debería ser UTF-8.'
 
     @staticmethod
     def delimiter_resultado_str(delimiter: str):
@@ -279,6 +279,8 @@ class Reporter:
         else:
             data = Reporter.process_column_error_str(error_str)
             columnas_errores = pd.DataFrame(data, columns=columns)
+        
+        columnas_errores = make_table(columnas_errores, bold_cols=True)
         
         encoding: str = qad['detected_encoding']
         encoding: str = encoding.lower()
@@ -397,8 +399,13 @@ class Reporter:
                                                          ['Scripts no declarados'])
         
         
-        tabla_scripts_no_cargados = Reporter.make_list(scripts_no_cargados, 
+        tabla_scripts_no_cargados = Reporter.make_list(scripts_no_cargados,     
                                                        ['Scripts no cargados'])
+        
+        tabla_datasets_no_declarados = make_table(tabla_datasets_no_declarados, bold_cols=True)
+        tabla_datasets_no_cargados = make_table(tabla_datasets_no_cargados, bold_cols=True)
+        tabla_scripts_no_declarados = make_table(tabla_scripts_no_declarados, bold_cols=True)
+        tabla_scripts_no_cargados = make_table(tabla_scripts_no_cargados, bold_cols=True)
         
 
         resumen = {
@@ -437,7 +444,10 @@ class Reporter:
             metadatos_incompletos = metadatos_incompletos_
 
         metadatos_incompletos_df = pd.DataFrame.from_dict(metadatos_incompletos)
-        metadatos_incompletos_df = make_table(df=metadatos_incompletos_df, bold_cols=True, wrap_text=True, max_width=40)
+        metadatos_incompletos_df = make_table(df=metadatos_incompletos_df, 
+                                              bold_cols=True, 
+                                              wrap_text=True,
+                                              max_width=40)
         metadatos_incompletos = {'data': metadatos_incompletos_df}
         metadatos_incompletos = templates.MetadatosIncompletos \
                                             .from_dict(metadatos_incompletos)
