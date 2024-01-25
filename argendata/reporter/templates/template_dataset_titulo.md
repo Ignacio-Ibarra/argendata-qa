@@ -1,6 +1,6 @@
 
 
-# CONTROLES EN DATASETS
+# Controles en datasets
 
 En esta sección se detallan los controles realizados sobre los datasets. 
 Dichos controles verifican el cumplimiento de los estándares determinados en la documentación: 

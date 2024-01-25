@@ -13,8 +13,8 @@ Si hubo diferencias, es probable que el resto del reporte no haya podido complet
 
 ### Controles de codificación
 
-*   **Encoding**: el detectado es `{{encoding}}`. {{encoding_resultado}}. 
-*   **Delimiter**: el detectado es "{{delimiter}}". {{delimiter_resultado}}. 
+*   **Encoding**: el detectado es `{{encoding}}`. {{encoding_resultado}}
+*   **Delimiter**: el detectado es "{{delimiter}}". {{delimiter_resultado}}
 
 ### Controles de formateo del dataset
 
