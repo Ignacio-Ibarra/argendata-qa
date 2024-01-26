@@ -44,3 +44,4 @@ Si la tabla se encuentra vacía significa que no se han registrado errores.
 {{detalle_caracteres_especiales.to_markdown(index=False)}}
 
 
+\newpage
