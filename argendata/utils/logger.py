@@ -67,6 +67,7 @@ def inject_logger(name_or_cls):
             class NewClass(cls):
                 log = LoggerFactory.getLogger(name_or_cls)
 
+            NewClass.__name__ = cls.__name__
             return NewClass
 
         return wrapper
