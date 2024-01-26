@@ -2,6 +2,7 @@ import os.path
 import json
 from logging import Logger
 from typing import Literal
+from io import BufferedReader
 from pydrive.files import GoogleDriveFile
 from argendata.utils.files import file
 from argendata.utils.files.mime import extensions
@@ -229,6 +230,74 @@ class GResource:
         result = GResource.build_subclass(file_obj)
         GResource.log.debug(f'Successfully instantiated locally {str(result)}.')
         return result
+    
+    @classmethod
+    def from_contents(cls, data: dict) -> 'GFile':
+        """
+        data.get('title') -> str
+        data.get('mimeType') -> str
+        data.get('parents') -> str
+        data.get('contents') -> dict['file', path] | dict['str', str]
+        """
+
+        if not keys_included(['mimeType', 'title'], data):
+            raise KeyError("Parameter 'data' must have 'mimeType' and 'title' as keys.")
+        
+        resource = GDrive.instance.CreateFile(data)
+        
+        if data['mimeType'] != GResource.FOLDER_MIMETYPE:
+            if 'content' not in data.keys():
+                raise KeyError("File resource has to have 'content' as a dict key.")
+
+            content_type: list[str] = list(data['content'].keys())
+
+            if len(content_type) > 1:
+                raise KeyError("'content' has to have only one key.")
+
+            type_mapping = {
+                'file': resource.SetContentFile,
+                'str': resource.SetContentString
+            }
+
+            set_content_method = type_mapping.get(content_type[0], None)
+
+            if set_content_method is None:
+                raise KeyError("'content' key has to be either 'file' or 'str'.")
+
+            set_content_method(data['content'][content_type[0]])
+            resource['content'] = resource.content
+
+        
+        return GResource.build_subclass(resource)
+
+    def upload(self, parent: 'str | GFolder', data: list[str] = None):
+        DEFAULT_DATA = {'title', 'mimeType', 'content'}
+        if data is None:
+            data = list(DEFAULT_DATA)
+        elif not set(data).issubset(DEFAULT_DATA):
+            raise ValueError("'data' has to have at least this keys defined:"
+                             f"{', '.join(DEFAULT_DATA)}.")    
+
+        match parent:
+            case folder if isinstance(parent, GFolder):
+                return self.upload(folder.id)
+            case id if isinstance(parent, str):
+                data = self.as_dict(fields=data)
+                content = data.pop('content', None)
+                
+                if content is None:
+                    raise Exception("Empty file")
+                
+
+                data = data | {'parents': [{'id': id}]}
+
+                remote_file = GDrive.instance.CreateFile(data)
+
+                if isinstance(content, BufferedReader):
+                    content = content.read().decode('utf-8')
+                remote_file.SetContentString(content)
+                remote_file.Upload()
+                return GResource.from_id(remote_file['id'])
 
     def download(self, path='', force=False) -> str:  # typing.Self existe a partir de Python 3.11
         """
@@ -274,14 +343,20 @@ class GResource:
         return
 
     def __str__(self):
-        return f'{self.__class__.__name__}({self.title} : {self.id})'
+        if 'title' in dir(self):
+            title = self.title
+        else:
+            title = 'Untitled'
+        
+        if 'id' in dir(self):
+            id = self.id
+        else:
+            id = 'N/A'
+        
+        return f'{self.__class__.__name__}({title} : {id})'
 
     def __repr__(self):
         return str(self)
-
-    # TODO: Portar display_str(rich: bool) para imprimir los recursos de manera más visual y compatible con
-    #   todas las consolas. (ASCII compatible / UNICODE+ANSI compatible)
-
 
     def fields_dict(self, fields: list[str] | Literal['all']) -> dict:
         """
@@ -403,11 +478,10 @@ class GFolder(GResource):
     def has(self, other: GResource):
         return GResource.exists(self.id, other.title, other.mimeType)
 
-
 class GFile(GResource):
     """TODO: Subclase de GResource, provee utilidades específicas para operar con archivos."""
 
-    __slots__ = ['title', 'id', 'mimeType']
+    #__slots__ = ['title', 'id', 'mimeType']
 
     def as_dict(self, fields=['id']):
         return self.fields_dict(fields=fields)
