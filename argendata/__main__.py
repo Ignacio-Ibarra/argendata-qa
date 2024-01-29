@@ -14,6 +14,7 @@ from argendata.reporter import Reporter
 from argendata.reporter.pdfexport import pandoc_export
 from argendata.freeze import generate_ids, autoajustar_columnas
 from argendata.freeze import exportar_definitivo
+import csv
 
 def wrap_string(string: str, max_length: int) -> str:
     if len(string) <= max_length:
@@ -61,10 +62,26 @@ def main(subtopico: str, entrega: int, generate_indices: bool, es_definitivo: bo
         log.info(f'PDF generado: {export_result}')
     
     if generate_indices or es_definitivo:
-        ids = generate_ids(subtopico, subtopico_obj.plantilla)
+        ids, csv_map, internal_mapping = generate_ids(subtopico, subtopico_obj.plantilla)
+
+        DataFrame(internal_mapping).to_csv(file(f'./output/{subtopico+str(entrega)}/internal_mapping.csv'),
+          index=False,
+          encoding='utf-8',
+          sep=',',
+          lineterminator='\n',
+          quoting=csv.QUOTE_ALL,
+          quotechar='"',
+          doublequote=True,
+          escapechar=None,
+          header=True
+         )
+
+        with open(file(f'./output/{subtopico+str(entrega)}/mappings.json'), 'w') as fp:
+            json.dump(csv_map, indent=4, fp=fp)
+
         pd.DataFrame(ids).to_excel(file(f'./output/{subtopico+str(entrega)}/{subtopico}.xlsx'), index=False)
         autoajustar_columnas(f'./output/{subtopico+str(entrega)}/{subtopico}.xlsx')
-        exportar_definitivo(subtopico, entrega, verificaciones['verificacion_datasets'][0], ids)
+        exportar_definitivo(subtopico_obj, subtopico, entrega, verificaciones['verificacion_datasets'][0], csv_map, ids)
 
 
 if __name__ == "__main__":

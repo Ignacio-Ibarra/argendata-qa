@@ -28,6 +28,9 @@ def formato_fuentes(x):
     return f'{fuente} - {institucion}'
 
 def generate_ids(subtopico: str, plantilla: pd.DataFrame):
+
+    # El orden de estas keys es el orden izq -> der
+    # de las columnas en la plantilla de output.
     output = {
         'ID Gráfico': {},
         'Estilo': {},
@@ -38,11 +41,21 @@ def generate_ids(subtopico: str, plantilla: pd.DataFrame):
         'Nota': {},
         'Referencia': {},
         'Observaciones': {},
-        'csv': {},
         'Fuentes': {},
+        'csv': {},
+        'Old título gráfico': {},
     }
 
-    for i, ((n, g), group) in enumerate(plantilla.groupby(['subtopico_desc', 'orden_grafico'])):
+    mappings = dict()
+    internal_mapping = {'subtopico_desc': [],
+                        'orden_grafico': [],
+                        'dataset_archivo': [],
+                        'public_id': [],
+                        'private_id': []}
+    for i, ((subtopico_desc, orden_grafico), group) in enumerate(plantilla.groupby(['subtopico_desc', 'orden_grafico'])):
+        # by copy
+        n = str(subtopico_desc)
+        g = str(orden_grafico)
         j = i+1
         point_index = n.rfind('.')
         n = n[:point_index]
@@ -58,11 +71,26 @@ def generate_ids(subtopico: str, plantilla: pd.DataFrame):
         fuentes_r = set(map(lambda x: tuple(map(clean_fuentes, x)), fuentes))
         fuentes_r = '; '.join(map(formato_fuentes, fuentes_r))
 
-        output['ID Gráfico'][result] = index
-        output['Fuentes'][result] = fuentes_r
-        output['csv'][result] = dataset_archivo
+        manual_definition = {
+            'ID Gráfico': index,
+            'Fuentes': fuentes_r,
+            'csv': index+'.csv',
+            'Old título gráfico': group['titulo_grafico'].iloc[0],
+        }
 
-        for k in set(output) - {'ID Gráfico', 'Fuentes', 'csv'}:
+        internal_mapping['subtopico_desc'].append(subtopico_desc)
+        internal_mapping['orden_grafico'].append(orden_grafico)
+        internal_mapping['dataset_archivo'].append(dataset_archivo)
+        internal_mapping['public_id'].append(index)
+        internal_mapping['private_id'].append(result)
+
+        mappings.setdefault(dataset_archivo.strip(), []).append({'private': result, 
+                                                         'public': index})
+
+        for k,v in manual_definition.items():
+            output[k][result] = v
+
+        for k in set(output) - set(manual_definition):
             output[k][result] = ''
     
-    return output
+    return output, mappings, internal_mapping

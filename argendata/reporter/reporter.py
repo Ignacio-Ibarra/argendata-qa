@@ -27,7 +27,7 @@ def make_table(df:pd.DataFrame, bold_cols:bool = False, wrap_text:bool = False, 
         if wrapped_cols == None:
             wrapped_cols = df.select_dtypes(include=['object']).columns.tolist()
         for col in wrapped_cols:
-            df[col] = df[col].apply(lambda s: wrap_string(s, max_length=max_width))
+            df[col] = df[col].apply(lambda s: wrap_string(str(s), max_length=max_width))
 
     df.columns = [bold_fmt(col) for col in df.columns.tolist()]
     return df
