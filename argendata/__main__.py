@@ -13,6 +13,7 @@ import pandas as pd
 from argendata.reporter import Reporter
 from argendata.reporter.pdfexport import pandoc_export
 from argendata.freeze import generate_ids, autoajustar_columnas
+from argendata.freeze import exportar_definitivo
 
 def wrap_string(string: str, max_length: int) -> str:
     if len(string) <= max_length:
@@ -22,7 +23,7 @@ def wrap_string(string: str, max_length: int) -> str:
     half_length = prefix_suffix_length // 2
     return string[:half_length+1] + '...' + string[-half_length:]
 
-def main(subtopico: str, entrega: int, generate_indices: bool):
+def main(subtopico: str, entrega: int, generate_indices: bool, es_definitivo: bool):
     log = LoggerFactory.getLogger('main')
     auth = GAuth.authenticate()
     drive = GDrive(auth)
@@ -59,10 +60,11 @@ def main(subtopico: str, entrega: int, generate_indices: bool):
     else:
         log.info(f'PDF generado: {export_result}')
     
-    if generate_indices:
+    if generate_indices or es_definitivo:
         ids = generate_ids(subtopico, subtopico_obj.plantilla)
         pd.DataFrame(ids).to_excel(file(f'./output/{subtopico+str(entrega)}/{subtopico}.xlsx'), index=False)
         autoajustar_columnas(f'./output/{subtopico+str(entrega)}/{subtopico}.xlsx')
+        exportar_definitivo(subtopico, entrega, verificaciones['verificacion_datasets'][0], ids)
 
 
 if __name__ == "__main__":
