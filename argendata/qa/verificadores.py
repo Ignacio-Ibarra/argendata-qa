@@ -290,10 +290,18 @@ class ControlSubtopico:
         csvs: filter[GFile] = filter(lambda x: x.title in self.datasets, a_verificar.dataset.resources)
         result = dict()
         errors = []
+
         for x in csvs:
             if 'geojson' in x.title.lower():
                 self.log.info(f'Salteando {x.title} por ser GeoJSON')
+                errors.append((x.title, 'Formato no-verificable: GeoJSON'))
                 continue
+            if '.nc' in x.title.lower():
+                self.log.info(f'Salteando {x.title} por set NetCDF')
+                errors.append((x.title, 'Formato inválido (NetCDF)'))
+                continue
+
+
             slice_plantilla = a_verificar.plantilla.loc[a_verificar.plantilla.dataset_archivo.str.strip() == x.title]
             partial_result: dict
             try:

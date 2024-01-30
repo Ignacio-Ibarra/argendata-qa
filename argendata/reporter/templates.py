@@ -91,6 +91,7 @@ class DatasetTitulo:
     
     # Tiene una sola columna '**Datasets Verificados**' con los nombres de los datasets de la intersección
     data: DataFrame
+    errores: str
 
 @template('./argendata/reporter/templates/template_dataset.md')
 class ReporteDataset:
