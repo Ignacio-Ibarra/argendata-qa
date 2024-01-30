@@ -476,11 +476,23 @@ class Reporter:
         datasest_verificados_df = make_table(df=datasest_verificados_df, bold_cols=True)
 
         errores_str = ''
-        for ds, e in errores:
-            errores_str += f"\n### {ds}\n"
-            errores_str += "```\n"
-            errores_str += e+"\n"
-            errores_str += "```\n"
+        if len(errores) > 0:
+            errores_str += "## Errores registrados\n\n"
+            errores_str += \
+                "En esta sección se detallan los errores, para cada"\
+            "dataset erróneo, que impidieron que se continue con"\
+            "el proceso de verificación para ese archivo. Cabe "\
+            "aclarar que estos son los resultados literales de "\
+            "los errores que surgieron, por lo que se recomienda "\
+            "fuertemente consultar por más detalles si no son claros.\n"
+            for ds, e in errores:
+                errores_str += f"\n### {ds}\n"
+                errores_str += "```\n"
+                if not isinstance(e, str):
+                    errores_str += "\n".join(e)+"\n"
+                else:
+                    errores_str += e+"\n"
+                errores_str += "```\n"
         
         dataset_titulo = {'data': datasest_verificados_df, 'errores': errores_str}
         dataset_titulo = templates.DatasetTitulo.from_dict(dataset_titulo)
