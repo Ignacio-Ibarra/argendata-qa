@@ -6,16 +6,19 @@ En esta sección se detallan los controles realizados sobre los datasets.
 Dichos controles verifican el cumplimiento de los estándares determinados en la documentación: 
 [Estándar para elaboración de datasets](https://docs.google.com/document/d/1vH59Akk1eZTb0m4wIyEdhyVV_rx2q8lg4bG5k2tJP20/edit?usp=sharing). 
 
-La lista de datasets provista a continuación corresponde con la intersección entre el conjunto de 
+La siguiente tabla cuenta con dos columnas:
+
+- **Datasets detectados** corresponde con la intersección entre el conjunto de 
 datasets efectivos y el conjunto de datasets declarados. En caso de que la lista se enecuentre vacía
-significa que los conjuntos no tienen ningún elemento en común.   
+significa que los conjuntos no tienen ningún elemento en común.
+
+- **No se pudieron verificar** muestra una de datasets que tuvieron errores e interrumpieron el proceso de verificación, por lo cuál no figuran como resultado en el detalle.
+
+Si hubo datasets erroneos, aparte de aparecer en la columna correspondiente, habrá una sección **erorres registrados** en la que se da el error literal que arrojó el proceso de verificación mientras se lo intentaba revisar. 
 
 {{data.to_markdown(index=False)}}
 
-## Errores registrados
-
 {{errores}}
-
 
 ## Acerca de los controles realizados
 
