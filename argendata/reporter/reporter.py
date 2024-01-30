@@ -39,14 +39,14 @@ def empty_df(columns: list):
     # empty_df = make_table(df=empty_df, bold_cols=True)
     return empty_df
 
-def complete(a: list, b: list) -> tuple[list, list]: # Con largos iguales
+def complete(a: list, b: list, fillwith='') -> tuple[list, list]: # Con largos iguales
     """
     Toma dos listas, y las completa con strings vacíos para que tengan el mismo largo.
     """
     max_length = max(len(a), len(b))
 
-    a.extend([''] * (max_length - len(a)))
-    b.extend([''] * (max_length - len(b)))
+    a.extend([fillwith] * (max_length - len(a)))
+    b.extend([fillwith] * (max_length - len(b)))
 
     return a, b
 
@@ -456,11 +456,33 @@ class Reporter:
 
         # Dataset titulo
 
-        datasest_verificados_df = Reporter.make_list(list(datasets_interseccion), 
-                                                     ['Datasets Verificados'])
-        datasest_verificados_df = make_table(df=datasest_verificados_df, bold_cols=True)
+        datasets_interseccion: set
+        errores = self.report['verificacion_datasets'][1]
+
+        datasets_erroneos = ['-' for _ in datasets_interseccion]
+        if len(errores) > 0:
+            x = map(list, zip(*errores))
+            datasets_erroneos, errores_dataset = x
+
+        dsets_inter, dsets_errores = complete(list(datasets_interseccion), 
+                                              datasets_erroneos,
+                                              fillwith='-')
+
+        datasest_verificados_df = pd.DataFrame({
+            'Datasets detectados': dsets_inter,
+            'No se pudieron verificar': dsets_errores
+        })
         
-        dataset_titulo = {'data': datasest_verificados_df}
+        datasest_verificados_df = make_table(df=datasest_verificados_df, bold_cols=True)
+
+        errores_str = ''
+        for ds, e in errores:
+            errores_str += f"\n### {ds}\n"
+            errores_str += "```\n"
+            errores_str += e+"\n"
+            errores_str += "```\n"
+        
+        dataset_titulo = {'data': datasest_verificados_df, 'errores': errores_str}
         dataset_titulo = templates.DatasetTitulo.from_dict(dataset_titulo)
         template_queue.append(dataset_titulo)
         outfiles.append('dataset_titulo.md')

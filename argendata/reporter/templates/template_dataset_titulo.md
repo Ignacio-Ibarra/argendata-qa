@@ -12,6 +12,10 @@ significa que los conjuntos no tienen ningún elemento en común.
 
 {{data.to_markdown(index=False)}}
 
+## Errores registrados
+
+{{errores}}
+
 
 ## Acerca de los controles realizados
 
