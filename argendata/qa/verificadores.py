@@ -29,7 +29,6 @@ class ControlCSV:
     def verificacion_encoding(self, a_verificar):
         codecs = get_codecs(a_verificar)
         if len(codecs) > 0:
-            self.log.debug('Usando programa propio para detectar encoding.')
             self.codec = codecs[0][0]
         else:
             self.log.debug('Usando chardet para detectar encoding.')
@@ -160,15 +159,17 @@ class ControlSubtopico:
 
         self.log.debug(f'#Datasets declarados = {len(datasets.declarados)}')
         self.log.debug(f'#Datasets efectivos = {len(datasets.efectivos)}')
-        self.log.debug(f'#Intersección = {len(self.datasets)}')
+        self.log.debug(f'#Interse   cción = {len(self.datasets)}')
 
         self.log.debug(f"#Datasts no cargados = {len(datasets_no_cargados)}")
-        if len(datasets_no_cargados)>0: 
-            self.log.debug("\n".join("\t'"+x+"'" for x in datasets_no_cargados))
+        #  if len(datasets_no_cargados)>0: 
+        #      for ds in ("\t'"+x+"'" for x in datasets_no_cargados):
+        #          self.log.debug(ds)
 
         self.log.debug(f"#Datasts no declarados = {len(datasets_no_declarados)}")
-        if len(datasets_no_declarados) > 0: 
-            self.log.debug("\n".join("\t'"+x+"'" for x in datasets_no_declarados))
+        #  if len(datasets_no_declarados) > 0: 
+        #      for ds in ("\t'"+x+"'" for x in datasets_no_declarados):
+        #          self.log.debug(ds)
 
         scripts_carpeta = a_verificar.carpeta.find_by_name('scripts')
         scripts = ControlSubtopico.ConteoArchivos()
@@ -190,12 +191,14 @@ class ControlSubtopico:
         self.log.debug(f'#Intersección = {len(self.scripts)}')
         
         self.log.debug(f"#Scripts no cargados = {len(scripts_no_cargados)}")
-        if len(scripts_no_cargados)>0: 
-            self.log.debug("\n".join("\t'"+x+"'" for x in scripts_no_cargados))
+        #  if len(scripts_no_cargados)>0: 
+        #      for s in ("\t'"+x+"'" for x in scripts_no_cargados):
+        #          self.log.debug(s)
 
         self.log.debug(f"#Scripts no declarados = {len(scripts_no_declarados)}")
-        if len(scripts_no_declarados)>0: 
-            self.log.debug("\n".join("\t'"+x+"'" for x in scripts_no_declarados))
+        #  if len(scripts_no_declarados)>0: 
+        #      for s in ("\t'"+x+"'" for x in scripts_no_declarados):
+        #          self.log.debug(s)
 
         completitud = ControlSubtopico.verificar_completitud(plantilla, self.datasets)
         self.log.info('No hay filas incompletas' if completitud.empty else 'Hay filas incompletas')
@@ -224,9 +227,9 @@ class ControlSubtopico:
         df.columns = df.columns.map(lambda x: x.strip())
 
         expected = set(map(lambda x: x.strip(), variables.to_list()))
-        self.log.debug(f'Columnas esperadas = {expected}')
+        #self.log.debug(f'Columnas esperadas = {expected}')
         got = set(df.columns)
-        self.log.debug(f'Columnas encontradas = {got}')
+        #self.log.debug(f'Columnas encontradas = {got}')
 
         if got != expected:
             partial_result.setdefault('errors', []).append(BadColumnsException(dataset.title, (expected), (got)))
