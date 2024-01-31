@@ -293,6 +293,10 @@ class Reporter:
             'iso88591': 'latin1',
         }
 
+        # FIXME: Esto es un hotfix al hecho de que ASCII deberia ser un
+        # encoding valido.
+        encodings['ascii'] = 'UTF-8'
+
         if encoding in encodings:
             encoding = encodings[encoding]
 
