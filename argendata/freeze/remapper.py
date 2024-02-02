@@ -39,7 +39,7 @@ def generate_ids(subtopico: str, plantilla: pd.DataFrame):
         'Eje X': {},
         'Eje Y': {},
         'Nota': {},
-        'Referencia': {},
+        # 'Referencia': {},
         'Observaciones': {},
         'Fuentes': {},
         'csv': {},
