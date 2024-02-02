@@ -29,7 +29,17 @@ def exportar_definitivo(subtopico_obj, nombre_subtopico: str, entrega: int, veri
         name = name.strip()
         path = file.download('./tmp/'+name)
 
-        for mapping in csv_map[name]:
+        mappings = csv_map.get(name, None)
+
+        if not mappings:
+            logger.error(f"Skipping {name} as it has no mappings")
+            continue
+
+        for mapping in mappings:
+            if any(invalid_format in name for invalid_format in ['.nc', '.geojson']):
+                logger.error(f"Skipping {name} as it has an invalid format")
+                continue
+
             pr_id, pb_id = mapping['private'], mapping['public']
 
             logger.info(f"Mapping {name} -> {pr_id} <-> {pb_id}")
