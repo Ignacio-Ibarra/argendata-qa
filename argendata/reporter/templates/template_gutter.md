@@ -42,5 +42,9 @@ header-includes:
   - |
     \titleformat{\subparagraph}[display]
       {\normalfont\small\bfseries}{\thesubparagraph}{1em}{}
+
+geometry:
+- left=20mm
+- right=20mm
 ---
 
