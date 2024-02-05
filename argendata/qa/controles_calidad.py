@@ -34,7 +34,9 @@ def is_tidy(data: DataFrame, keys: list[str], threshold: float = 0.5):
 @controles.register('nullity_check')
 def number_of_nulls(data: DataFrame, non_nullable):
     nulls_per_col = {colname : column.isna().sum() for colname, column in data.items()}
-    return not any([nulls_per_col.get(x) > 0 for x in non_nullable])
+    
+    result = [x for x in non_nullable if nulls_per_col.get(x) > 0]
+    return len(result) == 0, result
 
 # @controles.register('cardinality')
 # def check_cardinality(data: DataFrame, keys: list[str]):
