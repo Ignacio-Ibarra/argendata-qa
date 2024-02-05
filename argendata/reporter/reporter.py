@@ -477,7 +477,7 @@ class Reporter:
             'No se pudieron verificar': dsets_errores
         })
         
-        datasest_verificados_df = make_table(df=datasest_verificados_df, bold_cols=True)
+        datasest_verificados_df = make_table(df=datasest_verificados_df, bold_cols=True, wrap_text=True)
 
         errores_str = ''
         if len(errores) > 0:
