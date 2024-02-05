@@ -135,14 +135,18 @@ def unpack_duplicates(qa: dict):
 
 @QAUnpacker.register('nullity_check')
 def unpack_nullity(qa: dict):
-    nullity_ok: tuple|bool = qa['nullity_check']
+    result: tuple = qa['nullity_check']
+    nullity_status = result[0]
 
-    if isinstance(nullity_ok, tuple):
-        nullity_result = ERROR_STR
-    elif nullity_ok is True:
-        nullity_result = 'OK'
-    else:
-        nullity_result = 'Se encontraron valores nulos para las variables definidas como NOT NULLABLE'
+    match nullity_status:
+        case None:
+            nullity_result = ERROR_STR
+        case True:
+            nullity_result = 'OK'
+        case False:
+            nullity_result = 'Se encontraron valores nulos para las siguientes variables definidas como NOT NULLABLE:\n'
+            nullity_result += ''.join(f"\n\t- {x}" for x in set(result[1]))
+            nullity_result += '\n'
  
     return nullity_result
 
