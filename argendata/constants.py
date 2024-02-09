@@ -1,4 +1,6 @@
-ARGENDATA_FOLDER_ID = '16Out5kOds2kfsbudRvSoHGHsDfCml1p0'
+from dotenv import dotenv_values
+
+ARGENDATA_FOLDER_ID = dotenv_values()['ARGENDATA_FOLDER_ID']
 
 VALID_NAMES = ["CAMCLI", "TRANEN", "CIETEC", "INVDES", "AGROPE", "COMEXT", "CRECIM", "DESHUM", "ESTPRO", "INDUST",
                "INVIED", "MINERI", "SEBACO", "DESIGU", "MERTRA", "POBREZ", "SALING", "ACECON", "BADEPA", "DEUDAS",

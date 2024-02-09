@@ -6,6 +6,7 @@ test/utils/files/charsets/testfiles_encoding/*
 .idea/*
 output/*
 tools/*
+.env
 
 # Para poder hacer pruebas localmente
 test*.ipynb
