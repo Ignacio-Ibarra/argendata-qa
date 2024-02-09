@@ -264,3 +264,6 @@ fabric.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# Carpeta local
+correcciones_manuales/
