@@ -7,6 +7,8 @@ test/utils/files/charsets/testfiles_encoding/*
 output/*
 tools/*
 .env
+*.csv
+*.json
 
 # Para poder hacer pruebas localmente
 test*.ipynb
