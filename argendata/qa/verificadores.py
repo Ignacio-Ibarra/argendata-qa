@@ -42,7 +42,14 @@ class ControlCSV:
     def verificacion_delimiter(self, a_verificar):
         codec = self.codec
         with open(a_verificar, 'r', encoding=codec) as csvfile:
-            self.delimiter = str(csv.Sniffer().sniff(csvfile.read()).delimiter)
+            file_size = csvfile.seek(0, 2)
+            csvfile.seek(0)
+            sample_size = file_size
+            if file_size > 1_000_000:
+                sample_size = int(file_size * 0.01)
+                self.log.debug(f'File size too big! ({file_size} bytes)')
+                self.log.debug(f'Sniffing only {sample_size} bytes')
+            self.delimiter = str(csv.Sniffer().sniff(csvfile.read(sample_size)).delimiter)
         return self.delimiter
 
 class BadColumnsException(ValueError):
