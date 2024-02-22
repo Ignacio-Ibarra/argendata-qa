@@ -262,6 +262,8 @@ class ControlSubtopico:
 
         if len(keys) > 0:
             diccionario['tidy_data'] = diccionario['duplicates'] = keys
+        else: 
+            self.log.error(f"Dataset sin ninguna primary key definida")
 
         set_nn = set(not_nullable)
         set_cs = set(df.columns)
