@@ -9,6 +9,7 @@ tools/*
 .env
 *.csv
 *.json
+*.xlsx
 
 # Para poder hacer pruebas localmente
 test*.ipynb
