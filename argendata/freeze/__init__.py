@@ -27,6 +27,10 @@ def exportar_definitivo(subtopico_obj, nombre_subtopico: str, entrega: int, veri
     for file in subtopico_obj.dataset.resources:
         name = file.clean_title+file.extension
         name = name.strip()
+        if any(invalid_format in name for invalid_format in ['.nc', '.geojson']):
+            logger.error(f"Skipping {name} as it has an invalid format")
+            continue
+
         path = file.download('./tmp/'+name)
 
         mappings = csv_map.get(name, None)
