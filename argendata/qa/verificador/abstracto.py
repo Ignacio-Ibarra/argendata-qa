@@ -1,5 +1,5 @@
-from typing import Protocol, TypeVar, Type, Generic, Final
 from argendata.utils.logger import LoggerFactory
+    from typing import Protocol, TypeVar, Type, Generic, Final
 import inspect
 from inspect import Parameter
 from types import MappingProxyType
