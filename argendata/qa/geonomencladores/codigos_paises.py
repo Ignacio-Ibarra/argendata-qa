@@ -1,7 +1,9 @@
-from typing import Iterable, Generator, Tuple, Literal, Any
+from typing import Iterable, Generator, Tuple, Literal, Any, Callable, Optional
 from collections.abc import Collection
 from pandas import DataFrame
-from argendata.utils.fuzzy_matching import similar_to
+from argendata.utils.fuzzy_matching import similar_to, evaluate_similarity, str_normalizer, auto_translate, detector
+from pandas import Series
+import numpy as np
 
 string_keys = [
     'country_name_abbreviation',
@@ -88,19 +90,76 @@ FALSE = Literal[False]
 void = None
 empty_tuple = Tuple[void]
 
-def columa_codigos_es_correcta(columna) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
-    es_correcta = True
 
-    # ...
+# Se puede modificar acá los parámetros para normalizar un string. 
+normalize_parms : dict = {'to_lower':True, 
+                          'rm_accents':True,
+                          'rm_punct':True, 
+                          'rm_spw':False, 
+                          'rm_whitesp':True, 
+                          'sort_words':False}
 
-    if es_correcta:
-        return True, ()
-    else:
-        return False, (...)
+normalizer = str_normalizer(normalize_params=normalize_parms)
+
+def columa_codigos_es_correcta(input_codes:list[str], codes_set:set) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
+    # Sólo me fijo si hay diferencias en los sets de codigos
+    input_set = set(input_codes)
+    diff = input_set - codes_set
     
-def columna_nombres_es_correcta(columna) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
-    es_correcta = True
+    if len(diff):
+        return False, tuple(diff)
+    else:
+        return True, ()
+    
+def traer_nombre_similar(input_values:list[str], desc_values:list[str], final_thresh:float, normalizer_f:Optional[Callable]=normalizer):
+    """ desc_values asumo que viene normalizado y traducido"""
+    # input_values_translated = auto_translate(input_strings=input_values)
+    input_values_normalized = input_values.copy()
+    if normalizer_f:
+        input_values_normalized = list(map(normalizer_f, input_values_normalized))
+    selected = []
+    for s1 in input_values_normalized: 
+        scores_s1 = []
+        for s2 in desc_values:
+            scr = evaluate_similarity(s1=s1, s2=s2, threshs=[1, 1, 0.4, 0.1, 0.1], weights= [0.2, 0.2, 0.2, 0.2, 0.2])
+            scores_s1.append(scr)
+        
+        scores_s_arr = np.array(scores_s1)
+        sorted_ids = np.argsort(scores_s_arr)[::-1]
+        scores_s_arr_sorted = scores_s_arr[sorted_ids]
+        desc_values_sorted = np.array(desc_values)[sorted_ids]
+        desc_values_sorted_selected = desc_values_sorted[scores_s_arr_sorted>final_thresh]
+        if len(desc_values_sorted_selected)>0:
+            selected.append((s1, desc_values_sorted_selected[0]))
+        else:
+            selected.append((s1, None))
+    
+    return selected
 
+
+def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], normalizer_f:Optional[Callable]=normalizer) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
+    """ desc_values asumo que viene normalizado y traducido"""
+    input_values_translated = auto_translate(input_strings=input_values)
+    input_values_normalized = input_values_translated.copy()
+    if normalizer_f:
+        input_values_normalized = list(map(normalizer_f, input_values_normalized))
+    selected = []
+    for s1 in input_values_normalized: 
+        scores_s1 = []
+        for s2 in desc_values:
+            scr = evaluate_similarity(s1=s1, s2=s2, threshs=[1, 1, 0.4, 0.1, 0.1], weights= [0.2, 0.2, 0.2, 0.2, 0.2])
+            scores_s1.append(scr)
+        
+        scores_s_arr = np.array(scores_s1)
+        sorted_ids = np.argsort(scores_s_arr)[::-1]
+        scores_s_arr_sorted = scores_s_arr[sorted_ids]
+        desc_values_sorted = np.array(desc_values)[sorted_ids]
+        desc_values_sorted_selected = desc_values_sorted[scores_s_arr_sorted>0.8]
+        if len(desc_values_sorted_selected)>0:
+            selected.append((s1, desc_values_sorted_selected[0]))
+        else:
+            selected.append((s1, None))
+            
     # ...
 
     if es_correcta:
