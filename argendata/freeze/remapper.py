@@ -56,7 +56,7 @@ def generate_ids(subtopico: str, plantilla: pd.DataFrame):
         # by copy
         n = str(subtopico_desc)
         g = str(orden_grafico)
-        j = i+1
+        j = str(i+1).zfill(2)
         point_index = n.rfind('.')
         n = n[:point_index]
         n = n.replace('.', '-')
