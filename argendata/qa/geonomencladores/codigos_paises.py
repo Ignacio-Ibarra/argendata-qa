@@ -139,33 +139,14 @@ def traer_nombre_similar(input_values:list[str], desc_values:list[str], final_th
 
 def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], normalizer_f:Optional[Callable]=normalizer) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
     """ desc_values asumo que viene normalizado y traducido"""
-    input_values_translated = auto_translate(input_strings=input_values)
-    input_values_normalized = input_values_translated.copy()
-    if normalizer_f:
-        input_values_normalized = list(map(normalizer_f, input_values_normalized))
-    selected = []
-    for s1 in input_values_normalized: 
-        scores_s1 = []
-        for s2 in desc_values:
-            scr = evaluate_similarity(s1=s1, s2=s2, threshs=[1, 1, 0.4, 0.1, 0.1], weights= [0.2, 0.2, 0.2, 0.2, 0.2])
-            scores_s1.append(scr)
-        
-        scores_s_arr = np.array(scores_s1)
-        sorted_ids = np.argsort(scores_s_arr)[::-1]
-        scores_s_arr_sorted = scores_s_arr[sorted_ids]
-        desc_values_sorted = np.array(desc_values)[sorted_ids]
-        desc_values_sorted_selected = desc_values_sorted[scores_s_arr_sorted>0.8]
-        if len(desc_values_sorted_selected)>0:
-            selected.append((s1, desc_values_sorted_selected[0]))
-        else:
-            selected.append((s1, None))
-            
+    similares = traer_nombre_similar(input_values=input_values, desc_values=desc_values, normalizer_f=normalizer)
+    no_encontrados = list(filter(lambda x: x[1]==None, similares))         
     # ...
 
-    if es_correcta:
+    if len(no_encontrados)==0:
         return True, ()
     else:
-        return False, (...)
+        return False, tuple(no_encontrados)
 
 # ---------------------------------------------------------------------------------------------------------------------------------
 
