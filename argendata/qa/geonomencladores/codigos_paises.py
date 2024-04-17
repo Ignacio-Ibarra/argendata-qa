@@ -63,6 +63,7 @@ def get_k_similar(input: str, universe: Iterable[str], k, with_scores=False, thr
 def get_k_similar_from(universe: Iterable[str], k, with_scores=False, threshold=None):
     return lambda input: get_k_similar(input, universe, k, with_scores=with_scores, threshold=threshold)
 
+
 # FIXME: Esto por algun motivo no funciona bien con todos los codigos,
 # puede ser un problema cruzado con get_k_similar.
 def get_geo_columns(cols: Collection[str]) -> str:
@@ -85,6 +86,40 @@ def get_geo_columns(cols: Collection[str]) -> str:
     
     return result
 
+# Con esta función obtengo la cardinalidad de la relación entre dos variables de un dataset
+def get_cardinality(df:pd.DataFrame, col1:str, col2:str)->Literal['1:1','1:n','n:1','n:n']:
+    df_no_dup = df[[col1, col2]].drop_duplicates()
+
+    # Obtener conteo de valores únicos para cada columna
+    conteo_col1 = df_no_dup[col1].nunique()
+    conteo_col2 = df_no_dup[col2].nunique()
+
+    df_no_dup_len = len(df_no_dup)
+
+    # Verificar la cardinalidad
+    if conteo_col1 == df_no_dup_len and conteo_col2 == df_no_dup_len:
+        return '1:1'
+    elif conteo_col1 < df_no_dup_len and conteo_col2 == df_no_dup_len:
+        return '1:n'
+    elif conteo_col1 == df_no_dup_len and conteo_col2 < df_no_dup_len:
+        return 'n:1'
+    else:
+        return 'n:n'
+
+# Con esta función me traigo la primer columna que venga "pareada" con mi columna de referencia
+# e.g si le paso ref_col == "iso3" me va a devolver la primer columna que
+# tenga una relación '1:1' con la columna 'iso3' o me devuelve None si no 
+# hay ninguna columna que tenga esa relación.  
+def get_paired_col(df:pd.DataFrame, ref_col:str)->str|None: 
+    no_ref_col = [col for col in df.columns if col!=ref_col]
+    for col in no_ref_col:
+        cardinality = get_cardinality(df, col1=ref_col, col2=col)
+        if cardinality == "1:1":
+            print(f"La cardinalidad de {ref_col} con {col} es {get_cardinality(df, col1=ref_col, col2=col)}")
+            return col 
+        else:
+            return None
+        
 TRUE = Literal[True]
 FALSE = Literal[False]
 void = None
