@@ -165,7 +165,8 @@ def columa_codigos_es_correcta(input_codes:list[str], codes_set:set) -> Tuple[TR
     diff = input_set - codes_set
     
     if len(diff):
-        return False, tuple(diff)
+        result = tuple((input_codes.index(x),x) for x in diff)
+        return False, result
     else:
         return True, ()
     
@@ -194,7 +195,6 @@ def traer_nombre_similar(input_values:list[str], desc_values:list[str], final_th
     
     return selected
 
-
 def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], final_thresh:float, normalizer_f:Optional[Callable]=normalizer) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
     """ desc_values asumo que viene normalizado y traducido"""
     similares = traer_nombre_similar(input_values=input_values, desc_values=desc_values, final_thresh=final_thresh, normalizer_f=normalizer)
@@ -206,6 +206,59 @@ def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], f
         return True, ()
     else:
         return False, input_values_no_encontrados
+
+
+
+
+##########################################################################################
+
+#   ESTA ES LA PARTE QUE DECIA PARA EMULAR LO QUE PENSAMOS EN EL CUADRO
+
+##########################################################################################
+
+
+
+def busco_codigos_por_nombre(nombre_buscado:str, nomenclador:DataFrame)->Optional[list[str]]:
+    codigos = None
+    
+    # Comparo nombres normalizados
+
+    # Si el nombre lo encuentra devuelvo una lista con los codigos que encuentra por ese nombre
+    if codigos:
+        print(f"Para {nombre_buscado} se encontraron los códigos {codigos}") 
+    return codigos
+
+def busco_nombre_por_codigo(codigo_buscado:str, nomenclador:DataFrame)->Optional[str]:
+    nombre = None
+
+    # Logica para buscar nombre mediante codigo. 
+
+    # Si el codigo lo encuentra, devuelvo el nombre
+    if nombre:
+        print(f"Para {codigo_buscado} se encontró la entidad {nombre}")
+    return nombre
+
+# A) Si tengo codigo y desc en el dataset entonces aplico las siguientes lógicas
+
+# 1) El codigo es incorrecto, con la descripción busco cuál o cuales podrían ser 
+# los códigos correctos (asumo que una descripción podría tener más de un código, e.g Unión Europea, Unión Soviética)
+
+# a) Si esa descripción la encuentro entonces devolver: 
+# f"El codigo proporcionado no se encuentra en nuestro nomenclador, pero para esa entidad tenemos los codigos {codigos_encontrados}"
+
+# b) Si esa descripción no la encuentro entonces devolver:
+# f"El codigo proporcionado no se encuentra en nuestro nomenclador y para esa entidad no tenemos códigos asignados. Comunicate con tu referente del equipo de Datos de ArgenData"
+
+def devolverA1():
+    ...
+
+# 2) El codigo es correcto, busco el nombre y me fijo que sea el mismo que el del nomenclador
+
+# a) Si la descripción en el nomenclador es la misma que la que tiene el usuario, no devolver nada.  
+
+# a) Si la descripción en el nomenclador NO es la misma que la que tiene el usuario, devolver: 
+# La descripción que tenemos para el codigo buscado y el codigo para la descripción que tiene el usuario
+
 
 # ---------------------------------------------------------------------------------------------------------------------------------
 
