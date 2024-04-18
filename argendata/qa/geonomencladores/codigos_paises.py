@@ -2,7 +2,7 @@ from typing import Iterable, Generator, Tuple, Literal, Any, Callable, Optional
 from collections.abc import Collection
 from pandas import DataFrame
 from argendata.utils.fuzzy_matching import similar_to, evaluate_similarity, str_normalizer, auto_translate, detector
-from pandas import Series
+import pandas as pd
 import numpy as np
 
 string_keys = [
@@ -66,7 +66,7 @@ def get_k_similar_from(universe: Iterable[str], k, with_scores=False, threshold=
 
 # FIXME: Esto por algun motivo no funciona bien con todos los codigos,
 # puede ser un problema cruzado con get_k_similar.
-def get_geo_columns(cols: Collection[str]) -> str:
+def get_geo_columns_(cols: Collection[str]) -> str:
     codes   = map(get_k_similar_from(code_keys, k=60, with_scores=True, threshold=0), cols)
     strings = map(get_k_similar_from(string_keys, k=60, with_scores=True, threshold=0), cols)
 
@@ -85,6 +85,17 @@ def get_geo_columns(cols: Collection[str]) -> str:
         (codes_result if a > b else names_result).append(x)
     
     return result
+
+def es_columna_codigo(series:pd.Series)->bool: 
+    return series.apply(lambda x: len(str(x)) == 3).sum()> 0.90*len(series) 
+
+def get_columna_codigo_iso(df:pd.DataFrame)->str:
+    col_mask = df.apply(es_columna_codigo, axis=0)
+    cod_cols = df.columns[col_mask].tolist()
+    if len(cod_cols)==0:
+        return None
+    else: 
+        return cod_cols
 
 # Con esta función obtengo la cardinalidad de la relación entre dos variables de un dataset
 def get_cardinality(df:pd.DataFrame, col1:str, col2:str)->Literal['1:1','1:n','n:1','n:n']:
@@ -110,16 +121,28 @@ def get_cardinality(df:pd.DataFrame, col1:str, col2:str)->Literal['1:1','1:n','n
 # e.g si le paso ref_col == "iso3" me va a devolver la primer columna que
 # tenga una relación '1:1' con la columna 'iso3' o me devuelve None si no 
 # hay ninguna columna que tenga esa relación.  
-def get_paired_col(df:pd.DataFrame, ref_col:str)->str|None: 
+def get_paired_col(df:pd.DataFrame, ref_col:str)->Optional[str]: 
     no_ref_col = [col for col in df.columns if col!=ref_col]
     for col in no_ref_col:
         cardinality = get_cardinality(df, col1=ref_col, col2=col)
         if cardinality == "1:1":
-            print(f"La cardinalidad de {ref_col} con {col} es {get_cardinality(df, col1=ref_col, col2=col)}")
+            # print(f"La cardinalidad de {ref_col} con {col} es {get_cardinality(df, col1=ref_col, col2=col)}")
             return col 
         else:
             return None
-        
+
+def get_geo_columns(df:pd.DataFrame)->Optional[dict[str,str]]: 
+    cod_cols = get_columna_codigo_iso(df=df)
+    if  cod_cols: 
+        result = {}
+        for cod_col in cod_cols: 
+            desc_col = get_paired_col(df=df.select_dtypes(object), ref_col=cod_col)
+            if desc_col:
+                result['codigo'] = cod_col
+                result['descripcion'] = desc_col
+        return result
+    return None
+
 TRUE = Literal[True]
 FALSE = Literal[False]
 void = None
