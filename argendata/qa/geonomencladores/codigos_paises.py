@@ -1,3 +1,6 @@
+# 
+
+
 from typing import Iterable, Generator, Tuple, Literal, Any, Callable, Optional
 from collections.abc import Collection
 from pandas import DataFrame
@@ -66,7 +69,7 @@ def get_k_similar_from(universe: Iterable[str], k, with_scores=False, threshold=
 
 # FIXME: Esto por algun motivo no funciona bien con todos los codigos,
 # puede ser un problema cruzado con get_k_similar.
-def get_geo_columns_(cols: Collection[str]) -> str:
+def get_geo_columns_by_colnames(cols: Collection[str]) -> str:
     codes   = map(get_k_similar_from(code_keys, k=60, with_scores=True, threshold=0), cols)
     strings = map(get_k_similar_from(string_keys, k=60, with_scores=True, threshold=0), cols)
 
@@ -131,7 +134,7 @@ def get_paired_col(df:pd.DataFrame, ref_col:str)->Optional[str]:
         else:
             return None
 
-def get_geo_columns(df:pd.DataFrame)->Optional[dict[str,str]]: 
+def get_geo_columns_by_content(df:pd.DataFrame)->Optional[dict[str,str]]: 
     cod_cols = get_columna_codigo_iso(df=df)
     if  cod_cols: 
         result = {}
@@ -197,6 +200,8 @@ def traer_nombre_similar(input_values:list[str], desc_values:list[str], final_th
 
 def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], final_thresh:float, normalizer_f:Optional[Callable]=normalizer) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
     """ desc_values asumo que viene normalizado y traducido"""
+    # Debe devolver el indice, el nombre y si está o no en el nomenclador (el indice debería venir pareado
+    # con el indice del codigo)
     similares = traer_nombre_similar(input_values=input_values, desc_values=desc_values, final_thresh=final_thresh, normalizer_f=normalizer)
     ids_no_encontrados = np.array(list(map(lambda x:x[0], filter(lambda x: x[2]==None, similares)) ) )
     input_values_no_encontrados = tuple(list(np.array(input_values)[ids_no_encontrados])) 
@@ -208,8 +213,51 @@ def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], f
         return False, input_values_no_encontrados
 
 
+# A) PROGRAMA PARA DETERMINAR LAS GEO_COLUMNS 
+# Tengo la metadata, el df y una lista geoinfo = [...] que posee todos los niveles de agregacion de datasets geográficos válidos
+# Busco geo_columns mediante get_geo_columns_joan: para ello verifico si entre las columnas del dataset hay al menos una que 
+# matchean aproximadamente o bien con algun elemento de code_keys, o bien con algun elemento de string_keys, o bien con algún elemento de ambas. 
+# Devuelve un diccionario o None
+# Dict: Devolvió un diccionario, depende de lo que devuelva tengo distinas opciones (ver A.1.)
+# None:  
+## Verifico nivel_agregacion, devuelvo True o False
+## True: busco las geo_columns con get_geo_columns_nacho, depende de lo que devuelva tengo distinas opciones (ver B). 
+## False: pass
+
+## A.1.) PROGRAMA QUE TRATA DICCIONARIO GENERADO POR get_geo_columns_joan 
+## Devuelve list[tuple(str,str)]
+### CASO1: tengo un diccionario con una etiqueta para codigo y una etiqueta para descripción. 
+### Tomo como válidas esas geo_columns y devuelvo: [(cod_col1, desc_col1)]
+
+### CASO2: tengo un diccionario con más de una etiqueta para codigo y descripción.
+### Tengo que aplicarle geo_columns_nacho para poder asignar los pares  [(cod_col1, desc_col1), (cod_col2, desc_col2),...]
+
+### CASO3: solo tengo códigos
+### Reporto error: "Falta columna de descripciones para poder evaluar consistentente las referencias geográficas".
+### Devuelvo una lista con la forma [(cod_col1, None), (cod_col2, None)]
+
+### CASO4: sólo tengo descripciones
+### Reporto error: "Falta columna de cópdigos para poder evaluar consistentente las referencias geográficas". 
+### Devuelvo una lista con la forma [(None, desc_col1), (None, desc_col2)]
+
+# PROGRAMA QUE VERIFICA QUE UN CODIGO ESTE EN EL NOMENCLADOR. ---buscar_codigo
+# PROGRAMA QUE ATIENDE CASO3 (usar --buscar_codigo)
+
+# PROGRAMA QUE VERIFICA QUE UNA DESCRIPCION ESTE EN EL NOMENCLADOR. ---buscar_desc
+# PROGRAMA QUE ATIENDE CASO4 (usar --buscar_desc)
+
+# PROGRAMA QUE VERIFICA EL CONTENIDO DEL PAR GEO_COLUMN (CASO1 y CASO2)
+# Tengo como input:
+# a) un par para las columnas codigo, descripción. 
+# b) un dataframe
+# 1.obtengo el distinct para esas dos columnas
+# 2.normalizo las descripciones.
+# 3.verifico que el codigo esté en el nomenclador (0 está y 1no está) ---buscar_codigo
+# 4.verifico que la desc_norm esté o sea similar con alguna desc_norm del nomencaldor y devuelvo 1, sino 0 ---buscar_desc
+# 5.devuelvo df con codigo, desc, cod_encontrado (0 o 1), desc_encontrada (0 o 1)
 
 
+# PROGRAMA QUE TOMA DECISIONES CON RESPECTO A LA DEVOLUCION DEL PROGRAMA ANTERIOR. 
 ##########################################################################################
 
 #   ESTA ES LA PARTE QUE DECIA PARA EMULAR LO QUE PENSAMOS EN EL CUADRO
