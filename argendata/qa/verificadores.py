@@ -282,6 +282,8 @@ class ControlSubtopico:
             quality_analysis[k] = v
         
         partial_result['quality_checks'] = quality_analysis
+
+        # TODO: Agregar GeoControles y devolver resultado en un diccionario y agregar ese subdiccionario a una key de partial_results o devolver None si no tiene geoinfo. 
         return partial_result
     
     def error_handler(self, e: Exception, x):
