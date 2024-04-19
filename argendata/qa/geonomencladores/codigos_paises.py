@@ -213,59 +213,6 @@ def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], f
         return False, input_values_no_encontrados
 
 
-# A) PROGRAMA PARA DETERMINAR LAS GEO_COLUMNS 
-# Tengo la metadata, el df y una lista geoinfo = [...] que posee todos los niveles de agregacion de datasets geográficos válidos
-# Busco geo_columns mediante get_geo_columns_joan: para ello verifico si entre las columnas del dataset hay al menos una que 
-# matchean aproximadamente o bien con algun elemento de code_keys, o bien con algun elemento de string_keys, o bien con algún elemento de ambas. 
-# Devuelve un diccionario o None
-# Dict: Devolvió un diccionario, depende de lo que devuelva tengo distinas opciones (ver A.1.)
-# None:  
-## Verifico nivel_agregacion, devuelvo True o False
-## True: busco las geo_columns con get_geo_columns_nacho, depende de lo que devuelva tengo distinas opciones (ver B). 
-## False: pass
-
-## A.1.) PROGRAMA QUE TRATA DICCIONARIO GENERADO POR get_geo_columns_joan 
-## Devuelve list[tuple(str,str)]
-### CASO1: tengo un diccionario con una etiqueta para codigo y una etiqueta para descripción. 
-### Tomo como válidas esas geo_columns y devuelvo: [(cod_col1, desc_col1)]
-
-### CASO2: tengo un diccionario con más de una etiqueta para codigo y descripción.
-### Tengo que aplicarle geo_columns_nacho para poder asignar los pares  [(cod_col1, desc_col1), (cod_col2, desc_col2),...]
-
-### CASO3: solo tengo códigos
-### Reporto error: "Falta columna de descripciones para poder evaluar consistentente las referencias geográficas".
-### Devuelvo una lista con la forma [(cod_col1, None), (cod_col2, None)]
-
-### CASO4: sólo tengo descripciones
-### Reporto error: "Falta columna de cópdigos para poder evaluar consistentente las referencias geográficas". 
-### Devuelvo una lista con la forma [(None, desc_col1), (None, desc_col2)]
-
-# PROGRAMA QUE VERIFICA QUE UN CODIGO ESTE EN EL NOMENCLADOR. ---buscar_codigo
-# PROGRAMA QUE ATIENDE CASO3 (usar --buscar_codigo)
-
-# PROGRAMA QUE VERIFICA QUE UNA DESCRIPCION ESTE EN EL NOMENCLADOR. ---buscar_desc
-# PROGRAMA QUE ATIENDE CASO4 (usar --buscar_desc)
-
-# PROGRAMA QUE VERIFICA EL CONTENIDO DEL PAR GEO_COLUMN (CASO1 y CASO2)
-# Tengo como input:
-# a) un par para las columnas codigo, descripción. 
-# b) un dataframe
-# 1.obtengo el distinct para esas dos columnas
-# 2.normalizo las descripciones.
-# 3.verifico que el codigo esté en el nomenclador (0 está y 1no está) ---buscar_codigo
-# 4.verifico que la desc_norm esté o sea similar con alguna desc_norm del nomencaldor y devuelvo 1, sino 0 ---buscar_desc
-# 5.devuelvo df con codigo, desc, cod_encontrado (0 o 1), desc_encontrada (0 o 1)
-
-
-# PROGRAMA QUE TOMA DECISIONES CON RESPECTO A LA DEVOLUCION DEL PROGRAMA ANTERIOR. 
-##########################################################################################
-
-#   ESTA ES LA PARTE QUE DECIA PARA EMULAR LO QUE PENSAMOS EN EL CUADRO
-
-##########################################################################################
-
-
-
 def busco_codigos_por_nombre(nombre_buscado:str, nomenclador:DataFrame)->Optional[list[str]]:
     codigos = None
     
@@ -285,29 +232,6 @@ def busco_nombre_por_codigo(codigo_buscado:str, nomenclador:DataFrame)->Optional
     if nombre:
         print(f"Para {codigo_buscado} se encontró la entidad {nombre}")
     return nombre
-
-# A) Si tengo codigo y desc en el dataset entonces aplico las siguientes lógicas
-
-# 1) El codigo es incorrecto, con la descripción busco cuál o cuales podrían ser 
-# los códigos correctos (asumo que una descripción podría tener más de un código, e.g Unión Europea, Unión Soviética)
-
-# a) Si esa descripción la encuentro entonces devolver: 
-# f"El codigo proporcionado no se encuentra en nuestro nomenclador, pero para esa entidad tenemos los codigos {codigos_encontrados}"
-
-# b) Si esa descripción no la encuentro entonces devolver:
-# f"El codigo proporcionado no se encuentra en nuestro nomenclador y para esa entidad no tenemos códigos asignados. Comunicate con tu referente del equipo de Datos de ArgenData"
-
-def devolverA1():
-    ...
-
-# 2) El codigo es correcto, busco el nombre y me fijo que sea el mismo que el del nomenclador
-
-# a) Si la descripción en el nomenclador es la misma que la que tiene el usuario, no devolver nada.  
-
-# a) Si la descripción en el nomenclador NO es la misma que la que tiene el usuario, devolver: 
-# La descripción que tenemos para el codigo buscado y el codigo para la descripción que tiene el usuario
-
-
 # ---------------------------------------------------------------------------------------------------------------------------------
 
 from argendata.qa.verificadores import Verifica
