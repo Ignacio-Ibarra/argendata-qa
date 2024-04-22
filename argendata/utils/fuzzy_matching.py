@@ -15,14 +15,6 @@ languages = [Language.ENGLISH,
 detector = LanguageDetectorBuilder.from_languages(*languages).build()
 
 
-def similarity(a: str, b: str) -> float:
-    
-    # TODO: Implementar alguna técnica de fuzzy matching.
-    return 1 if a == b else 0
-
-def similar_to(a: str) -> Callable[[str], float]:
-    return lambda b: similarity(a, b)
-
 # Limpieza de strings
 def remove_whitespaces(s:str)->str:
     return " ".join(s.split())
@@ -227,3 +219,10 @@ def likely_matching(s1:str, s2:str, threshs:list=threshs_selected, strictly=Fals
         result = all(bin_results)
     return result
 
+def colnames_similarity(a: str, b: str) -> float:
+    
+    scr = normalized_levenshtein_similarity(s1=a, s2=b, mapper=my_mapper)
+    return scr 
+
+def colnames_similarityx(a: str) -> Callable[[str], float]:
+    return lambda b: colnames_similarity(a, b)
