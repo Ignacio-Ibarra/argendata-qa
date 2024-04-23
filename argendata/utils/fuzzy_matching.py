@@ -48,16 +48,13 @@ def auto_translate(input_strings:list[str], lang_detector:LanguageDetector):
     df = pd.DataFrame()
     df['detected_languages'] = detect_language(list_strings=input_strings, lang_detector=lang_detector)
     df['input_strings'] = input_strings
-    df['output_strings'] = ""
+    df['output_strings'] = input_strings
 
     for detected_lang in df.detected_languages.unique(): 
         filtered_list = df.loc[df.detected_languages == detected_lang, 'input_strings'].to_list()
         if detected_lang != "es":
             translated_list = bulk_translate(string_list=filtered_list, input_lang=detected_lang, output_lang='es')
             df.loc[df.detected_languages == detected_lang, 'output_strings'] = translated_list
-        else:
-            df.loc[df.detected_languages == detected_lang, 'output_strings'] = filtered_list
-
 
     return df.output_strings.to_list()
     
