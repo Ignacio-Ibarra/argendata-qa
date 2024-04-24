@@ -1,14 +1,42 @@
-# 
 
-
-from typing import Iterable, Generator, Tuple, Literal, Any, Callable, Optional, List
+from lingua import Language, LanguageDetectorBuilder
+from typing import Tuple, Literal, Any, Callable, Optional, List
 from collections.abc import Collection
 from pandas import DataFrame
-from argendata.utils.fuzzy_matching import evaluate_similarity, str_normalizer, auto_translate, detector
+from argendata.utils.fuzzy_matching import evaluate_similarity, str_normalizer, get_k_similar_from
+from argendata.utils.translator import auto_translator
 import pandas as pd
 import numpy as np
 
-string_keys = [
+# Defino algunos tipos 
+TRUE = Literal[True]
+FALSE = Literal[False]
+void = None
+empty_tuple = Tuple[void]
+empty_list = List[void]
+
+
+# Defino función para normalizar strings según parámetros de entrada. 
+normalize_parms : dict = {'to_lower':True, 
+                          'rm_accents':True,
+                          'rm_punct':True, 
+                          'rm_spw':False, 
+                          'rm_whitesp':True, 
+                          'sort_words':False}
+
+str_normalizer_f = str_normalizer(normalize_params=normalize_parms)
+
+# Defino función para traducciones 
+languages = [Language.ENGLISH, 
+             Language.SPANISH,
+             Language.FRENCH,
+             Language.PORTUGUESE]
+
+detector = LanguageDetectorBuilder.from_languages(*languages).build()
+auto_translator_f = auto_translator(lang_detector=detector)
+
+# Defino strings usuales para columnas que contengan descripciones
+column_keys = [
     'country_name_abbreviation',
     'pais',
     'partner_name_short_en',
@@ -18,10 +46,11 @@ string_keys = [
     'pais_o_grupo_de_paises',
     'countryname',
     'region_name',
-    'pais_nombre'
+    'pais_nombre',
     'nombre_pais'
 ]
 
+# Defino strings usuales para columnas que contengan codigos
 code_keys = [
     'iso3_desc',
     'region_code',
@@ -34,64 +63,29 @@ code_keys = [
     'iso3_desc_fundar'
 ]
 
-all_keys = string_keys + code_keys
 
-def get_similarities(input: str, universe: Iterable[str], similarity_func:Callable, generator=False) -> list[float] | Generator[float, None, None]:
-    if len(universe) == 0:
-        raise ValueError("Can't compare against an empty universe")
+# Función para encontrar columnas geo por fuzzy matching
+def get_geo_columns_by_colnames(cols: Collection[str], similarity_func:Callable, threshold:float, k:int) -> Optional[Tuple[List[Tuple[str,float]]]]:
+    result = None
+    codes   = list(map(get_k_similar_from(code_keys, k=k, with_scores=True, threshold=threshold, similarity_func=similarity_func), cols))
+    strings = list(map(get_k_similar_from(column_keys, k=k, with_scores=True, threshold=threshold, similarity_func=similarity_func), cols))
+      
     
-    comparison = similarity_func(input)
-    results = map(comparison, universe)
+    if any(len(x)>0 for x in codes):
+        result_codes = [x for x in list(codes) if x!=[]][0]
+        result = (result_codes,)
+    if any(len(x)>0 for x in strings): 
+        result_strings =  [x for x in list(strings) if x!=[]][0]
+        result = result + (result_strings,)
 
-    if generator:
-        return results
-    
-    return list(results)
-    
-
-def get_k_similar(input: str, universe: Iterable[str], k, similarity_func:Callable, with_scores=False, threshold=None, ) -> list[str] | list[tuple[str, float]]:
-    similarities = get_similarities(input, universe, similarity_func=similarity_func)
-    similarities = zip(universe, similarities)
-    similarities = list(similarities)
-    similarities.sort(reverse=True, key=lambda x: x[1])
-
-    if threshold is not None:
-        similarities = [(x,s) for x,s in similarities if s > threshold]
-
-    result = similarities if with_scores else [x for x,_ in similarities]
-    result = result[:k]
-    
     return result
 
-def get_k_similar_from(universe: Iterable[str], k, similarity_func:Callable, with_scores=False, threshold=None):
-    return lambda input: get_k_similar(input, universe, k, with_scores=with_scores, threshold=threshold, similarity_func=similarity_func)
 
-
-# FIXME: Esto por algun motivo no funciona bien con todos los codigos,
-# puede ser un problema cruzado con get_k_similar.
-def get_geo_columns_by_colnames(cols: Collection[str]) -> str:
-    codes   = map(get_k_similar_from(code_keys, k=60, with_scores=True, threshold=0), cols)
-    strings = map(get_k_similar_from(string_keys, k=60, with_scores=True, threshold=0), cols)
-
-    code_scores = [sum([x for _,x in y]) for y in codes]
-    string_scores = [sum([x for _,x in y]) for y in strings]
-
-    codes_result = []
-    names_result = []
-
-    result = {
-        'codes': codes_result,
-        'names': names_result
-    }
-
-    for x, (a,b) in zip(cols, zip(code_scores, string_scores)):
-        (codes_result if a > b else names_result).append(x)
-    
-    return result
-
+# Función para definir si una columna tiene codigos. 
 def es_columna_codigo(series:pd.Series)->bool: 
     return series.apply(lambda x: len(str(x)) == 3).sum()> 0.90*len(series) 
 
+# Función para obtener la columna que tiene códigos. 
 def get_columna_codigo_iso(df:pd.DataFrame)->str:
     col_mask = df.apply(es_columna_codigo, axis=0)
     cod_cols = df.columns[col_mask].tolist()
@@ -134,34 +128,39 @@ def get_paired_col(df:pd.DataFrame, ref_col:str)->Optional[str]:
         else:
             return None
 
+# Función para obtner 
 def get_geo_columns_by_content(df:pd.DataFrame)->Optional[dict[str,str]]: 
     cod_cols = get_columna_codigo_iso(df=df)
+    result = None
     if  cod_cols: 
-        result = {}
+        result = []
         for cod_col in cod_cols: 
             desc_col = get_paired_col(df=df.select_dtypes(object), ref_col=cod_col)
-            if desc_col:
-                result['codigo'] = cod_col
-                result['descripcion'] = desc_col
-        return result
-    return None
-
-TRUE = Literal[True]
-FALSE = Literal[False]
-void = None
-empty_tuple = Tuple[void]
-empty_list = List[void]
+            result.append((cod_col,desc_col))
+    if result:
+        print("Se encontraron geo columns buscando el contenido")
+    return result
 
 
-# Se puede modificar acá los parámetros para normalizar un string. 
-normalize_parms : dict = {'to_lower':True, 
-                          'rm_accents':True,
-                          'rm_punct':True, 
-                          'rm_spw':False, 
-                          'rm_whitesp':True, 
-                          'sort_words':False}
+def get_geo_columns(df:pd.DataFrame, colnames_string_matcher:Callable)->Optional[List[Tuple[str,str]]]:
+    
+    # primero busco geo_columns con matcheo difuso
+    col_match = get_geo_columns_by_colnames(cols=df.columns.tolist(), similarity_func=colnames_string_matcher, threshold=0.9, k=5)
+    if col_match:
+        if all([len(x)==1 for x in col_match]):
+            print("Se encontraron geo columns mediante fuzzy matching")
+            return col_match
+        else:
+            print("Se buscan geo columns verificando contenido de columnas")
+            col_match = get_geo_columns_by_content(df=df)
+    else:
+        print("Se buscan geo columns verificando contenido de columnas")
+        col_match =  get_geo_columns_by_content(df=df)
+    return col_match
+        
 
-normalizer = str_normalizer(normalize_params=normalize_parms)
+    
+
 
 def columa_codigos_es_correcta(input_codes:list[str], universe_codes:list[str]) -> Tuple[FALSE, empty_list, list[Tuple[int,str,bool]] ] | Tuple[TRUE,  list[Tuple[int,str,bool]], list[Tuple[int,str,bool]]]:
     """Es una función que evalua para cada codigo de la lista input_codes 
@@ -195,7 +194,7 @@ def descripcion_compara_universo(s1:str, desc_universe_normalized:list[str])->np
                         
     return np.array(scores_s1)
 
-def traer_nombre_similar(input_desc:list[str], desc_universe:list[str], final_thresh:float, normalizer_f:Optional[Callable]=normalizer)->List[Tuple[int, str, int|None, str|None]]:
+def traer_nombre_similar(input_desc:list[str], desc_universe:list[str], final_thresh:float, normalizer_f:Optional[Callable], translator_f:Optional[Callable])->List[Tuple[int, str, int|None, str|None]]:
     """Función que trae la descripción más similar comparando con el universo de descripciones, 
     siempre que la similitud tenga un score mayor al final_thresh. 
 
@@ -203,24 +202,32 @@ def traer_nombre_similar(input_desc:list[str], desc_universe:list[str], final_th
         input_desc (list[str]): Descripciones input de países, se asume que están en español, pero no normalizadas.
         desc_universe (list[str]): Universo de descripciones de países contra los que se compara, están en español, pero no normalizadas. 
         final_thresh (float): Umbral para indicar si un score de similitud indica similitud o no. 
-        normalizer_f (Optional[Callable], optional): Función para normalizar strings. Defaults to normalizer.
+        normalizer_f (Optional[Callable], optional): Función para normalizar strings.
+        translator_f (Optional[Callable], optional): Función para normalizar strings.
 
     Returns:
         List[Tuple[int, str, int|None, str|None]]: Devuelve una lista con el indice de la descripción, 
         la descripción, el indice de la descripción similar o None y la descripción similar o None
     """
-    input_desc_normalized = input_desc.copy()
-    desc_universe_normalized = desc_universe.copy()
+    input_desc_analyzed = input_desc.copy()
+    desc_universe_analyzed = desc_universe.copy()
+
+    if translator_f:
+        print("Traduciendo descripciones antes del análisis")
+        input_desc_analyzed = translator_f(input_desc_analyzed)
+        desc_universe_analyzed = translator_f(desc_universe_analyzed)
+
     if normalizer_f:
-        input_desc_normalized = list(map(normalizer_f, input_desc_normalized))
-        desc_universe_normalized = list(map(normalizer_f, desc_universe_normalized))
+        print("Normalizando descripciones antes del análisis")
+        input_desc_analyzed = list(map(normalizer_f, input_desc_analyzed))
+        desc_universe_analyzed = list(map(normalizer_f, desc_universe_analyzed))
     
     selected = []
     
     # Para cada string en input_desc_normalized
-    for i, s1 in enumerate(input_desc_normalized): 
+    for i, s1 in enumerate(input_desc_analyzed): 
                
-        scores_s1_arr = descripcion_compara_universo(s1=s1, desc_universe_normalized=desc_universe_normalized)
+        scores_s1_arr = descripcion_compara_universo(s1=s1, desc_universe_normalized=desc_universe_analyzed)
         sorted_ids = np.argsort(scores_s1_arr)[::-1]
         scores_s_arr_sorted = scores_s1_arr[sorted_ids]
         desc_values_sorted = np.array(desc_universe)[sorted_ids]
@@ -234,18 +241,31 @@ def traer_nombre_similar(input_desc:list[str], desc_universe:list[str], final_th
     return selected
 
 
-def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], final_thresh:float, normalizer_f:Optional[Callable]=normalizer) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
-    """ desc_values asumo que viene normalizado y traducido"""
-    
-    similares = traer_nombre_similar(input_values=input_values, desc_values=desc_values, final_thresh=final_thresh, normalizer_f=normalizer)
-    ids_no_encontrados = np.array(list(map(lambda x:x[0], filter(lambda x: x[2]==None, similares)) ) )
-    input_values_no_encontrados = tuple(list(np.array(input_values)[ids_no_encontrados])) 
-    # ...
+def columna_nombres_es_correcta(input_desc:list[str], desc_universe:list[str], final_thresh:float, normalizer_f:Optional[Callable]=str_normalizer_f, translator_f:Optional[Callable]=auto_translator_f) -> Tuple[TRUE, empty_list, List[Tuple[int, str, int, str]]] | Tuple[FALSE, List[Tuple[int, str, None, None]], List[Tuple[int, str, int|None, str|None]]]:
+    """Función que define si una columna de descripciones es correcta segun un universo de descripciones válidos. 
+    En caso de que no sea correcta devuelve descripciones incorrectas.   
 
-    if len(ids_no_encontrados)==0:
-        return True, ()
+    Args:
+        input_desc (list[str]): Descripciones input de países, se asume que están en español, pero no normalizadas.
+        desc_universe (list[str]): Universo de descripciones de países contra los que se compara, están en español, pero no normalizadas. 
+        final_thresh (float): Umbral para indicar si un score de similitud indica similitud o no. 
+        normalizer_f (Optional[Callable], optional): Función para normalizar strings. Defaults to str_normalizer_f.
+        translator_f (Optional[Callable], optional): Función para normalizar strings. Defaults to auto_translator_f.
+
+    Returns:
+        Tuple[TRUE, empty_list, List[Tuple[int, str, int, str]]] | Tuple[FALSE, List[Tuple[int, str, None, None]], List[Tuple[int, str, int|None, str|None]]]:
+        Devuelve una tupla de tres elementos: 
+        a) TRUE or FALSE,
+        b) Lista vacía si a) TRUE or Lista de tuplas con las descripciones e índices que no encontraron similares entre las descripciones válidas. 
+        c) Lista con todas los resultados encontrados para cada descripción input.
+    """
+    result = traer_nombre_similar(input_desc=input_desc, desc_universe=desc_universe, final_thresh=final_thresh, normalizer_f=normalizer_f, translator_f=translator_f)
+    no_encontrados = list(filter(lambda x: x[2]==None, result))
+    
+    if len(no_encontrados)==0:
+        return True, [], result
     else:
-        return False, input_values_no_encontrados
+        return False, no_encontrados, result
 
 
 def busco_codigos_por_nombre(nombre_buscado:str, nomenclador:DataFrame)->Optional[list[str]]:
