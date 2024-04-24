@@ -3,6 +3,10 @@ import re
 from typing import Literal
 from time import sleep
 import numpy.random as random
+import pandas as pd
+from lingua import LanguageDetector
+
+
 
 if (sys.version_info[0] < 3):
     import urllib2
@@ -69,3 +73,29 @@ def bulk_translate(string_list:list[str], input_lang:Literal['en','es','fr','aut
     s = collapser.join(string_list)
     o = translate(s, from_language=input_lang, to_language=output_lang)
     return [x.lstrip().rstrip() for x in o.split(collapser)]
+
+
+def detect_language(list_strings:list[str], lang_detector:LanguageDetector)->str: 
+    detections = lang_detector.compute_language_confidence_values_in_parallel(list_strings)
+    results = list(map(lambda x: x[0].language.iso_code_639_1.name.lower(), detections))
+    # TODO: determinar falsos positivos.
+    # TODO: ver como viene la distribución de scores para ver si elijo el primero o no. 
+    return results
+
+def auto_translate(input_strings:list[str], lang_detector:LanguageDetector): 
+    df = pd.DataFrame()
+    df['detected_languages'] = detect_language(list_strings=input_strings, lang_detector=lang_detector)
+    df['input_strings'] = input_strings
+    df['output_strings'] = input_strings
+
+    for detected_lang in df.detected_languages.unique(): 
+        filtered_list = df.loc[df.detected_languages == detected_lang, 'input_strings'].to_list()
+        if detected_lang != "es":
+            translated_list = bulk_translate(string_list=filtered_list, input_lang=detected_lang, output_lang='es')
+            df.loc[df.detected_languages == detected_lang, 'output_strings'] = translated_list
+
+    return df.output_strings.to_list()
+
+
+def auto_translator(lang_detector:LanguageDetector): 
+    return lambda input_strings: auto_translate(input_strings=input_strings, lang_detector=lang_detector)
