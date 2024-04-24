@@ -1,8 +1,11 @@
-from typing import Iterable, Generator, Tuple, Literal, Any, Callable, Optional
+# 
+
+
+from typing import Iterable, Generator, Tuple, Literal, Any, Callable, Optional, List
 from collections.abc import Collection
 from pandas import DataFrame
-from argendata.utils.fuzzy_matching import similar_to, evaluate_similarity, str_normalizer, auto_translate, detector
-from pandas import Series
+from argendata.utils.fuzzy_matching import evaluate_similarity, str_normalizer, auto_translate, detector
+import pandas as pd
 import numpy as np
 
 string_keys = [
@@ -33,11 +36,11 @@ code_keys = [
 
 all_keys = string_keys + code_keys
 
-def get_similarities(input: str, universe: Iterable[str], generator=False) -> list[float] | Generator[float, None, None]:
+def get_similarities(input: str, universe: Iterable[str], similarity_func:Callable, generator=False) -> list[float] | Generator[float, None, None]:
     if len(universe) == 0:
         raise ValueError("Can't compare against an empty universe")
     
-    comparison = similar_to(input)
+    comparison = similarity_func(input)
     results = map(comparison, universe)
 
     if generator:
@@ -46,8 +49,8 @@ def get_similarities(input: str, universe: Iterable[str], generator=False) -> li
     return list(results)
     
 
-def get_k_similar(input: str, universe: Iterable[str], k, with_scores=False, threshold=None) -> list[str] | list[tuple[str, float]]:
-    similarities = get_similarities(input, universe)
+def get_k_similar(input: str, universe: Iterable[str], k, similarity_func:Callable, with_scores=False, threshold=None, ) -> list[str] | list[tuple[str, float]]:
+    similarities = get_similarities(input, universe, similarity_func=similarity_func)
     similarities = zip(universe, similarities)
     similarities = list(similarities)
     similarities.sort(reverse=True, key=lambda x: x[1])
@@ -60,13 +63,13 @@ def get_k_similar(input: str, universe: Iterable[str], k, with_scores=False, thr
     
     return result
 
-def get_k_similar_from(universe: Iterable[str], k, with_scores=False, threshold=None):
-    return lambda input: get_k_similar(input, universe, k, with_scores=with_scores, threshold=threshold)
+def get_k_similar_from(universe: Iterable[str], k, similarity_func:Callable, with_scores=False, threshold=None):
+    return lambda input: get_k_similar(input, universe, k, with_scores=with_scores, threshold=threshold, similarity_func=similarity_func)
 
 
 # FIXME: Esto por algun motivo no funciona bien con todos los codigos,
 # puede ser un problema cruzado con get_k_similar.
-def get_geo_columns(cols: Collection[str]) -> str:
+def get_geo_columns_by_colnames(cols: Collection[str]) -> str:
     codes   = map(get_k_similar_from(code_keys, k=60, with_scores=True, threshold=0), cols)
     strings = map(get_k_similar_from(string_keys, k=60, with_scores=True, threshold=0), cols)
 
@@ -85,6 +88,17 @@ def get_geo_columns(cols: Collection[str]) -> str:
         (codes_result if a > b else names_result).append(x)
     
     return result
+
+def es_columna_codigo(series:pd.Series)->bool: 
+    return series.apply(lambda x: len(str(x)) == 3).sum()> 0.90*len(series) 
+
+def get_columna_codigo_iso(df:pd.DataFrame)->str:
+    col_mask = df.apply(es_columna_codigo, axis=0)
+    cod_cols = df.columns[col_mask].tolist()
+    if len(cod_cols)==0:
+        return None
+    else: 
+        return cod_cols
 
 # Con esta función obtengo la cardinalidad de la relación entre dos variables de un dataset
 def get_cardinality(df:pd.DataFrame, col1:str, col2:str)->Literal['1:1','1:n','n:1','n:n']:
@@ -110,20 +124,33 @@ def get_cardinality(df:pd.DataFrame, col1:str, col2:str)->Literal['1:1','1:n','n
 # e.g si le paso ref_col == "iso3" me va a devolver la primer columna que
 # tenga una relación '1:1' con la columna 'iso3' o me devuelve None si no 
 # hay ninguna columna que tenga esa relación.  
-def get_paired_col(df:pd.DataFrame, ref_col:str)->str|None: 
+def get_paired_col(df:pd.DataFrame, ref_col:str)->Optional[str]: 
     no_ref_col = [col for col in df.columns if col!=ref_col]
     for col in no_ref_col:
         cardinality = get_cardinality(df, col1=ref_col, col2=col)
         if cardinality == "1:1":
-            print(f"La cardinalidad de {ref_col} con {col} es {get_cardinality(df, col1=ref_col, col2=col)}")
+            # print(f"La cardinalidad de {ref_col} con {col} es {get_cardinality(df, col1=ref_col, col2=col)}")
             return col 
         else:
             return None
-        
+
+def get_geo_columns_by_content(df:pd.DataFrame)->Optional[dict[str,str]]: 
+    cod_cols = get_columna_codigo_iso(df=df)
+    if  cod_cols: 
+        result = {}
+        for cod_col in cod_cols: 
+            desc_col = get_paired_col(df=df.select_dtypes(object), ref_col=cod_col)
+            if desc_col:
+                result['codigo'] = cod_col
+                result['descripcion'] = desc_col
+        return result
+    return None
+
 TRUE = Literal[True]
 FALSE = Literal[False]
 void = None
 empty_tuple = Tuple[void]
+empty_list = List[void]
 
 
 # Se puede modificar acá los parámetros para normalizar un string. 
@@ -136,44 +163,80 @@ normalize_parms : dict = {'to_lower':True,
 
 normalizer = str_normalizer(normalize_params=normalize_parms)
 
-def columa_codigos_es_correcta(input_codes:list[str], codes_set:set) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
-    # Sólo me fijo si hay diferencias en los sets de codigos
-    input_set = set(input_codes)
-    diff = input_set - codes_set
+def columa_codigos_es_correcta(input_codes:list[str], universe_codes:list[str]) -> Tuple[FALSE, empty_list, list[Tuple[int,str,bool]] ] | Tuple[TRUE,  list[Tuple[int,str,bool]], list[Tuple[int,str,bool]]]:
+    """Es una función que evalua para cada codigo de la lista input_codes 
+    si el codigo se encuentra en el universo de codigos provisto
+
+    Args:
+        input_codes (list[str]): Lista de códigos que se quiere verificar
+        universe_codes (list[str]): Universo de códigos contra el que se requiere chequear. 
+
+    Returns:
+        Tuple[TRUE, empty_list, list[Tuple[int,str,bool]] ] | Tuple[FALSE,  list[Tuple[int,str,bool]], list[Tuple[int,str,bool]]]: 
+        Si todos los códigos se encuentran, devuelve: True, una lista vacía de diferencias y el listado de resultados de la comparación. 
+        Si hay al menos un código que no se encuentra, devuelve: False, una lista con diferencias y el listado de resultados de la comparación. 
+    """
+    result = [(i,x,x in universe_codes) for i,x in enumerate(input_codes)]
+    diff = list(filter(lambda x: x[2]==False, result))
     
-    if len(diff):
-        return False, tuple(diff)
+    if len(diff) == 0:
+        return True, [], result
     else:
-        return True, ()
+        return False, diff, result
+
+def descripcion_compara_universo(s1:str, desc_universe_normalized:list[str])->np.array:
     
-def traer_nombre_similar(input_values:list[str], desc_values:list[str], final_thresh:float, normalizer_f:Optional[Callable]=normalizer):
-    """ desc_values asumo que viene normalizado y traducido"""
-    # input_values_translated = auto_translate(input_strings=input_values)
-    input_values_normalized = input_values.copy()
+    scores_s1 = []
+
+    # Para cada string en desc_universe
+    for s2 in desc_universe_normalized:
+        scr = evaluate_similarity(s1=s1, s2=s2)
+        scores_s1.append(scr)
+                        
+    return np.array(scores_s1)
+
+def traer_nombre_similar(input_desc:list[str], desc_universe:list[str], final_thresh:float, normalizer_f:Optional[Callable]=normalizer)->List[Tuple[int, str, int|None, str|None]]:
+    """Función que trae la descripción más similar comparando con el universo de descripciones, 
+    siempre que la similitud tenga un score mayor al final_thresh. 
+
+    Args:
+        input_desc (list[str]): Descripciones input de países, se asume que están en español, pero no normalizadas.
+        desc_universe (list[str]): Universo de descripciones de países contra los que se compara, están en español, pero no normalizadas. 
+        final_thresh (float): Umbral para indicar si un score de similitud indica similitud o no. 
+        normalizer_f (Optional[Callable], optional): Función para normalizar strings. Defaults to normalizer.
+
+    Returns:
+        List[Tuple[int, str, int|None, str|None]]: Devuelve una lista con el indice de la descripción, 
+        la descripción, el indice de la descripción similar o None y la descripción similar o None
+    """
+    input_desc_normalized = input_desc.copy()
+    desc_universe_normalized = desc_universe.copy()
     if normalizer_f:
-        input_values_normalized = list(map(normalizer_f, input_values_normalized))
-    selected = []
-    for i, s1 in enumerate(input_values_normalized): 
-        scores_s1 = []
-        for s2 in desc_values:
-            scr = evaluate_similarity(s1=s1, s2=s2)
-            scores_s1.append(scr)
-        
-        scores_s_arr = np.array(scores_s1)
-        sorted_ids = np.argsort(scores_s_arr)[::-1]
-        scores_s_arr_sorted = scores_s_arr[sorted_ids]
-        desc_values_sorted = np.array(desc_values)[sorted_ids]
-        desc_values_sorted_selected = desc_values_sorted[scores_s_arr_sorted>final_thresh]
-        if len(desc_values_sorted_selected)>0:
-            selected.append((i, s1, desc_values_sorted_selected[0]))
-        else:
-            selected.append((i, s1, None))
+        input_desc_normalized = list(map(normalizer_f, input_desc_normalized))
+        desc_universe_normalized = list(map(normalizer_f, desc_universe_normalized))
     
+    selected = []
+    
+    # Para cada string en input_desc_normalized
+    for i, s1 in enumerate(input_desc_normalized): 
+               
+        scores_s1_arr = descripcion_compara_universo(s1=s1, desc_universe_normalized=desc_universe_normalized)
+        sorted_ids = np.argsort(scores_s1_arr)[::-1]
+        scores_s_arr_sorted = scores_s1_arr[sorted_ids]
+        desc_values_sorted = np.array(desc_universe)[sorted_ids]
+        desc_values_sorted_selected = desc_values_sorted[scores_s_arr_sorted>final_thresh]
+        
+        if len(desc_values_sorted_selected) > 0:
+            selected.append((i, input_desc[i], sorted_ids[0], desc_values_sorted_selected[0]))
+        else:
+            selected.append((i, input_desc[i], None, None))
+        
     return selected
 
 
 def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], final_thresh:float, normalizer_f:Optional[Callable]=normalizer) -> Tuple[TRUE, empty_tuple] | Tuple[FALSE, Tuple[Any]]:
     """ desc_values asumo que viene normalizado y traducido"""
+    
     similares = traer_nombre_similar(input_values=input_values, desc_values=desc_values, final_thresh=final_thresh, normalizer_f=normalizer)
     ids_no_encontrados = np.array(list(map(lambda x:x[0], filter(lambda x: x[2]==None, similares)) ) )
     input_values_no_encontrados = tuple(list(np.array(input_values)[ids_no_encontrados])) 
@@ -184,6 +247,26 @@ def columna_nombres_es_correcta(input_values:list[str], desc_values:list[str], f
     else:
         return False, input_values_no_encontrados
 
+
+def busco_codigos_por_nombre(nombre_buscado:str, nomenclador:DataFrame)->Optional[list[str]]:
+    codigos = None
+    
+    # Comparo nombres normalizados
+
+    # Si el nombre lo encuentra devuelvo una lista con los codigos que encuentra por ese nombre
+    if codigos:
+        print(f"Para {nombre_buscado} se encontraron los códigos {codigos}") 
+    return codigos
+
+def busco_nombre_por_codigo(codigo_buscado:str, nomenclador:DataFrame)->Optional[str]:
+    nombre = None
+
+    # Logica para buscar nombre mediante codigo. 
+
+    # Si el codigo lo encuentra, devuelvo el nombre
+    if nombre:
+        print(f"Para {codigo_buscado} se encontró la entidad {nombre}")
+    return nombre
 # ---------------------------------------------------------------------------------------------------------------------------------
 
 from argendata.qa.verificadores import Verifica

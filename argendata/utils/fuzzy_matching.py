@@ -15,14 +15,6 @@ languages = [Language.ENGLISH,
 detector = LanguageDetectorBuilder.from_languages(*languages).build()
 
 
-def similarity(a: str, b: str) -> float:
-    
-    # TODO: Implementar alguna técnica de fuzzy matching.
-    return 1 if a == b else 0
-
-def similar_to(a: str) -> Callable[[str], float]:
-    return lambda b: similarity(a, b)
-
 # Limpieza de strings
 def remove_whitespaces(s:str)->str:
     return " ".join(s.split())
@@ -56,16 +48,13 @@ def auto_translate(input_strings:list[str], lang_detector:LanguageDetector):
     df = pd.DataFrame()
     df['detected_languages'] = detect_language(list_strings=input_strings, lang_detector=lang_detector)
     df['input_strings'] = input_strings
-    df['output_strings'] = ""
+    df['output_strings'] = input_strings
 
     for detected_lang in df.detected_languages.unique(): 
         filtered_list = df.loc[df.detected_languages == detected_lang, 'input_strings'].to_list()
         if detected_lang != "es":
             translated_list = bulk_translate(string_list=filtered_list, input_lang=detected_lang, output_lang='es')
             df.loc[df.detected_languages == detected_lang, 'output_strings'] = translated_list
-        else:
-            df.loc[df.detected_languages == detected_lang, 'output_strings'] = filtered_list
-
 
     return df.output_strings.to_list()
     
@@ -227,3 +216,10 @@ def likely_matching(s1:str, s2:str, threshs:list=threshs_selected, strictly=Fals
         result = all(bin_results)
     return result
 
+def colnames_similarity(a: str, b: str) -> float:
+    
+    scr = normalized_levenshtein_similarity(s1=a, s2=b, mapper=my_mapper)
+    return scr 
+
+def colnames_similarityx(a: str) -> Callable[[str], float]:
+    return lambda b: colnames_similarity(a, b)

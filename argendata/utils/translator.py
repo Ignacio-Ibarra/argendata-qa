@@ -68,4 +68,4 @@ def translate(to_translate, to_language="auto", from_language="auto"):
 def bulk_translate(string_list:list[str], input_lang:Literal['en','es','fr','auto'] = 'auto', output_lang:Literal['en','es','fr','auto'] = 'auto', collapser:str =";")->list[str]:
     s = collapser.join(string_list)
     o = translate(s, from_language=input_lang, to_language=output_lang)
-    return o.split(collapser)
+    return [x.lstrip().rstrip() for x in o.split(collapser)]
