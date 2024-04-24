@@ -1,18 +1,8 @@
-from argendata.utils.translator import bulk_translate, translate
 import unicodedata
 import numpy as np
-from typing import List, Callable
-from lingua import Language, LanguageDetectorBuilder, LanguageDetector
+from typing import List, Callable, Iterable, Generator
 import pandas as pd
 
-languages = [Language.ENGLISH, 
-             Language.SPANISH,
-             Language.FRENCH,
-             Language.PORTUGUESE]
-
-
-
-detector = LanguageDetectorBuilder.from_languages(*languages).build()
 
 
 # Limpieza de strings
@@ -36,29 +26,6 @@ def remove_special_words(s:str, special_words:list=['republica','de', 'del'])->s
 def sort_words_alphabetically(s:str)->str:
     return " ".join(sorted(s.split(" ")))
 
-
-def detect_language(list_strings:list[str], lang_detector:LanguageDetector)->str: 
-    detections = lang_detector.compute_language_confidence_values_in_parallel(list_strings)
-    results = list(map(lambda x: x[0].language.iso_code_639_1.name.lower(), detections))
-    # TODO: determinar falsos positivos.
-    # TODO: ver como viene la distribución de scores para ver si elijo el primero o no. 
-    return results
-
-def auto_translate(input_strings:list[str], lang_detector:LanguageDetector): 
-    df = pd.DataFrame()
-    df['detected_languages'] = detect_language(list_strings=input_strings, lang_detector=lang_detector)
-    df['input_strings'] = input_strings
-    df['output_strings'] = input_strings
-
-    for detected_lang in df.detected_languages.unique(): 
-        filtered_list = df.loc[df.detected_languages == detected_lang, 'input_strings'].to_list()
-        if detected_lang != "es":
-            translated_list = bulk_translate(string_list=filtered_list, input_lang=detected_lang, output_lang='es')
-            df.loc[df.detected_languages == detected_lang, 'output_strings'] = translated_list
-
-    return df.output_strings.to_list()
-    
-     
         
 
 
@@ -223,3 +190,33 @@ def colnames_similarity(a: str, b: str) -> float:
 
 def colnames_similarityx(a: str) -> Callable[[str], float]:
     return lambda b: colnames_similarity(a, b)
+
+def get_similarities(input: str, universe: Iterable[str], similarity_func:Callable, generator=False) -> list[float] | Generator[float, None, None]:
+    if len(universe) == 0:
+        raise ValueError("Can't compare against an empty universe")
+    
+    comparison = similarity_func(input)
+    results = map(comparison, universe)
+
+    if generator:
+        return results
+    
+    return list(results)
+    
+
+def get_k_similar(input: str, universe: Iterable[str], k, similarity_func:Callable, with_scores=False, threshold=None, ) -> list[str] | list[tuple[str, float]]:
+    similarities = get_similarities(input, universe, similarity_func=similarity_func)
+    similarities = zip(universe, similarities)
+    similarities = list(similarities)
+    similarities.sort(reverse=True, key=lambda x: x[1])
+
+    if threshold is not None:
+        similarities = [(x,s) for x,s in similarities if s > threshold]
+
+    result = similarities if with_scores else [x for x,_ in similarities]
+    result = result[:k]
+    
+    return result
+
+def get_k_similar_from(universe: Iterable[str], k, similarity_func:Callable, with_scores=False, threshold=None):
+    return lambda input: get_k_similar(input, universe, k, with_scores=with_scores, threshold=threshold, similarity_func=similarity_func)
