@@ -1,6 +1,6 @@
 import csv
 from typing import TextIO, Iterable
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, read_csv, read_excel
 from pandas.errors import ParserError
 import numpy as np
 from argendata.utils.gwrappers import GResource, GFile
@@ -9,6 +9,8 @@ from argendata.utils.files.charsets import get_codecs
 from .subtopico import Subtopico
 from .verificador.abstracto import Verifica
 from .controles_calidad import make_controls
+from .geonomencladores.codigos_paises import GeoControles, str_normalizer_f, auto_translator_f
+from argendata.utils.fuzzy_matching import colnames_similarityx
 import chardet
 import re
 
@@ -284,6 +286,16 @@ class ControlSubtopico:
         partial_result['quality_checks'] = quality_analysis
 
         # TODO: Agregar GeoControles y devolver resultado en un diccionario y agregar ese subdiccionario a una key de partial_results o devolver None si no tiene geoinfo. 
+        
+        nomenclador = read_excel(r'C:\Users\Joan\Coding\Python\datos-Fundar\backend\argendata\qa\geonomencladores\geonomenclador.xlsx')
+
+        geocontroles = GeoControles(name=dataset.title, dataset=df, nomenclador=nomenclador, 
+                                                      colnames_string_matcher=colnames_similarityx, 
+                                                      col_sim_thresh=0.9, 
+                                                      desc_sim_thresh=0.5, 
+                                                      k=5, 
+                                                      normalizer_f=str_normalizer_f, 
+                                                      translator_f=auto_translator_f).verificar_todo()
         return partial_result
     
     def error_handler(self, e: Exception, x):
