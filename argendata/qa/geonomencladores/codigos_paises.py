@@ -142,24 +142,23 @@ def get_geo_columns_by_content(df:pd.DataFrame)->Optional[dict[str,str]]:
     return result
 
 
-def get_geo_columns(df:pd.DataFrame, colnames_string_matcher:Callable)->Optional[List[Tuple[str,str]]]:
+def get_geo_columns(df:pd.DataFrame, colnames_string_matcher:Callable, threshold:float=0.9, k:int=5)->Optional[List[Tuple[str,str]]]:
     
     # primero busco geo_columns con matcheo difuso
-    col_match = get_geo_columns_by_colnames(cols=df.columns.tolist(), similarity_func=colnames_string_matcher, threshold=0.9, k=5)
+    col_match = get_geo_columns_by_colnames(cols=df.columns.tolist(), similarity_func=colnames_string_matcher, threshold=threshold, k=k)
     if col_match:
         if all([len(x)==1 for x in col_match]):
-            print("Se encontraron geo columns mediante fuzzy matching")
+            print(f"Se encontraron geo columns mediante fuzzy matching {col_match}")
+            col_match = [(col_match[0][0][0], col_match[1][0][0])]
             return col_match
         else:
-            print("Se buscan geo columns verificando contenido de columnas")
+            print(f"Con matcheo difuso no se pudo determinar paridad de columnas: {col_match}.\nPor ello, se buscan geo columns verificando contenido de columnas")
             col_match = get_geo_columns_by_content(df=df)
     else:
         print("Se buscan geo columns verificando contenido de columnas")
         col_match =  get_geo_columns_by_content(df=df)
     return col_match
         
-
-    
 
 
 def columa_codigos_es_correcta(input_codes:list[str], universe_codes:list[str]) -> Tuple[FALSE, empty_list, list[Tuple[int,str,bool]] ] | Tuple[TRUE,  list[Tuple[int,str,bool]], list[Tuple[int,str,bool]]]:
