@@ -166,7 +166,7 @@ class ControlSubtopico:
 
         self.log.debug(f'#Datasets declarados = {len(datasets.declarados)}')
         self.log.debug(f'#Datasets efectivos = {len(datasets.efectivos)}')
-        self.log.debug(f'#Interse   cción = {len(self.datasets)}')
+        self.log.debug(f'#Intersección = {len(self.datasets)}')
 
         self.log.debug(f"#Datasts no cargados = {len(datasets_no_cargados)}")
         #  if len(datasets_no_cargados)>0: 
