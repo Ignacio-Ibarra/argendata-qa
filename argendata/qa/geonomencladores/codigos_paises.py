@@ -2,7 +2,6 @@
 from lingua import Language, LanguageDetectorBuilder
 from typing import Tuple, Literal, Any, Callable, Optional, List
 from collections.abc import Collection
-from pandas import DataFrame
 from argendata.utils.fuzzy_matching import evaluate_similarity, str_normalizer, get_k_similar_from
 from argendata.utils.translator import auto_translator
 import pandas as pd
@@ -267,31 +266,69 @@ def columna_nombres_es_correcta(input_desc:list[str], desc_universe:list[str], f
         return False, no_encontrados, result
 
 
-def busco_codigos_por_nombre(nombre_buscado:str, nomenclador:DataFrame)->Optional[list[str]]:
-    codigos = None
-    
-    # Comparo nombres normalizados
-
-    # Si el nombre lo encuentra devuelvo una lista con los codigos que encuentra por ese nombre
-    if codigos:
-        print(f"Para {nombre_buscado} se encontraron los códigos {codigos}") 
-    return codigos
-
-def busco_nombre_por_codigo(codigo_buscado:str, nomenclador:DataFrame)->Optional[str]:
-    nombre = None
-
-    # Logica para buscar nombre mediante codigo. 
-
-    # Si el codigo lo encuentra, devuelvo el nombre
-    if nombre:
-        print(f"Para {codigo_buscado} se encontró la entidad {nombre}")
-    return nombre
 # ---------------------------------------------------------------------------------------------------------------------------------
-
 from argendata.qa.verificadores import Verifica
+from pandas import DataFrame
 
 @Verifica[DataFrame]
-class Geocontroles:
+class GeoControles: 
+
+    dataset : DataFrame
+    nomenclador : DataFrame
+    colnames_string_matcher : Callable[[str], float]
+    col_sim_thresh : float
+    k : int
+    normalizer_f : Callable[[List[str]], List[str]]
+    translator_f : Callable[[List[str]], List[str]]
+    desc_sim_thresh : float
+
+
+    def __init__(self, dataset, nomenclador, colnames_string_matcher, 
+                 col_sim_thresh, k, normalizer_f, translator_f, desc_sim_thresh) -> None:
+        self.dataset = dataset
+        self.nomenclador = nomenclador
+        self.colnames_string_matcher = colnames_string_matcher
+        self.col_sim_thresh = col_sim_thresh
+        self.k = k
+        self.normalizer_f = normalizer_f
+        self.translator_f = translator_f
+        self.desc_sim_thresh = desc_sim_thresh
+
     
-    def __init__(self, df: DataFrame):
-        ...
+    def verificacion_existencia_geo_columns(self, dataset, colnames_string_matcher, col_sim_thresh, k)->Optional[List[Tuple[str]]]:
+        self.col_match = get_geo_columns(df=dataset, colnames_string_matcher=colnames_string_matcher, 
+                                         threshold=col_sim_thresh, k=k)
+        if self.col_match:
+            return self.col_match
+        else:
+            return None
+    
+    
+    def verificacion_geo_columnas_son_correctas(self, dataset:DataFrame, nomenclador:DataFrame, desc_sim_thresh:float, 
+                                            normalizer_f:Callable, translator_f:Optional[Callable])->Optional[dict[int,Tuple[Any]]]:
+        self.total_results = None
+        self.code_universe = nomenclador['codigo_fundar'].to_list()
+        self.desc_universe = nomenclador['desc_fundar'].to_list()
+        
+        if self.col_match:
+            self.total_results = {}
+            for pair, (cod_col, desc_col) in enumerate(self.col_match): 
+                
+                # Garantizo que las listas input_codes e input_desc estén indexadas igual. 
+                analyzed_data = dataset[[cod_col, desc_col]].drop_duplicates().reset_index(drop=True)
+                input_codes = analyzed_data[cod_col].to_list()
+                input_desc = analyzed_data[desc_col].to_list()
+
+                result_codes = columa_codigos_es_correcta(input_codes=input_codes, universe_codes=self.code_universe)
+                
+                result_desc = columna_nombres_es_correcta(input_desc=input_desc, desc_universe=self.desc_universe, 
+                                                          final_thresh=desc_sim_thresh, normalizer_f=normalizer_f, 
+                                                          translator_f=translator_f)
+                paired_result = {}
+                paired_result['cod_col_name'] = cod_col
+                paired_result['cod_col_result'] = result_codes
+                paired_result['desc_col_name'] = desc_col
+                paired_result['desc_col_result'] = result_desc
+                self.total_results[pair] = paired_result
+        
+        return self.total_results    
