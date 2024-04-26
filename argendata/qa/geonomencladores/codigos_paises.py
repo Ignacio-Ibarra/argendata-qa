@@ -65,19 +65,35 @@ code_keys = [
 
 # Función para encontrar columnas geo por fuzzy matching
 def get_geo_columns_by_colnames(cols: Collection[str], similarity_func:Callable, threshold:float, k:int) -> Optional[Tuple[List[Tuple[str,float]]]]:
-    result = None
-    codes   = list(map(get_k_similar_from(code_keys, k=k, with_scores=True, threshold=threshold, similarity_func=similarity_func), cols))
-    strings = list(map(get_k_similar_from(column_keys, k=k, with_scores=True, threshold=threshold, similarity_func=similarity_func), cols))
-      
-    
-    if any(len(x)>0 for x in codes):
-        result_codes = [x for x in list(codes) if x!=[]][0]
-        result = (result_codes,)
-    if any(len(x)>0 for x in strings): 
-        result_strings =  [x for x in list(strings) if x!=[]][0]
-        result = result + (result_strings,)
+    codes   = map(get_k_similar_from(code_keys, similarity_func=similarity_func, k=k, with_scores=True, threshold=threshold), cols)
+    strings = map(get_k_similar_from(column_keys, similarity_func=similarity_func, k=k, with_scores=True, threshold=threshold), cols)
 
-    return result
+    code_scores = [sum([x for _,x in y]) for y in codes]
+    string_scores = [sum([x for _,x in y]) for y in strings]
+
+    codes_result = []
+    names_result = []
+
+    result = {
+        'codes': codes_result,
+        'names': names_result
+    }
+
+    for x, (a,b) in zip(cols, zip(code_scores, string_scores)):
+        if a+b == 0:
+            continue
+        
+        if a > b:
+            seq = codes_result
+            score = a
+        else:
+            seq = names_result
+            score = b
+        
+        seq.append((x, score))
+        # (codes_result if a > b else names_result).append(x)
+    
+    return tuple(result.values())
 
 
 # Función para definir si una columna tiene codigos. 
