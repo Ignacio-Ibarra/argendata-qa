@@ -19,9 +19,9 @@ empty_list = List[void]
 normalize_parms : dict = {'to_lower':True, 
                           'rm_accents':True,
                           'rm_punct':True, 
-                          'rm_spw':False, 
+                          'rm_spw':True, 
                           'rm_whitesp':True, 
-                          'sort_words':False}
+                          'sort_words':True}
 
 str_normalizer_f = str_normalizer(normalize_params=normalize_parms)
 
@@ -97,9 +97,16 @@ def get_geo_columns_by_colnames(cols: Collection[str], similarity_func:Callable,
     return result 
 
 
+def es_string_iso(value:Any)->bool: 
+    is_string = isinstance(value, str)
+    is_len3 = len(str(value)) == 3
+    is_upper = str(value).isupper()
+    return (is_string and is_len3 and is_upper)
+
+
 # Función para definir si una columna tiene codigos. 
 def es_columna_codigo(series:pd.Series)->bool: 
-    return series.apply(lambda x: len(str(x)) == 3).sum()> 0.90*len(series) 
+    return series.apply(lambda x: es_string_iso(x)).sum()> 0.90*len(series) 
 
 # Función para obtener la columna que tiene códigos. 
 def get_columna_codigo_iso(df:pd.DataFrame)->str:
@@ -224,19 +231,24 @@ def traer_nombre_similar(input_desc:list[str], desc_universe:list[str], final_th
         List[Tuple[int, str, int|None, str|None]]: Devuelve una lista con el indice de la descripción, 
         la descripción, el indice de la descripción similar o None y la descripción similar o None
     """
+    data = pd.DataFrame()
     input_desc_analyzed = input_desc.copy()
+    data['input_desc'] = input_desc_analyzed
     desc_universe_analyzed = desc_universe.copy()
 
     if translator_f:
         print("Traduciendo descripciones antes del análisis")
         input_desc_analyzed = translator_f(input_desc_analyzed)
+        data['translated'] = input_desc_analyzed
         desc_universe_analyzed = translator_f(desc_universe_analyzed)
 
     if normalizer_f:
         print("Normalizando descripciones antes del análisis")
         input_desc_analyzed = list(map(normalizer_f, input_desc_analyzed))
+        data['normalized'] = input_desc_analyzed
         desc_universe_analyzed = list(map(normalizer_f, desc_universe_analyzed))
     
+    print(data)
     selected = []
     
     # Para cada string en input_desc_normalized
