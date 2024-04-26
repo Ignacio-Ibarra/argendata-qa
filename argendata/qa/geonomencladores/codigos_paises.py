@@ -74,7 +74,7 @@ def get_geo_columns_by_colnames(cols: Collection[str], similarity_func:Callable,
     codes_result = []
     names_result = []
 
-    result = {
+    result_ = {
         'codes': codes_result,
         'names': names_result
     }
@@ -91,9 +91,10 @@ def get_geo_columns_by_colnames(cols: Collection[str], similarity_func:Callable,
             score = b
         
         seq.append((x, score))
-        # (codes_result if a > b else names_result).append(x)
+        
+    result = tuple(result_.values())
     
-    return tuple(result.values())
+    return result 
 
 
 # Función para definir si una columna tiene codigos. 
@@ -282,6 +283,10 @@ def columna_nombres_es_correcta(input_desc:list[str], desc_universe:list[str], f
         return False, no_encontrados, result
 
 
+def data_to_analyze(df:pd.DataFrame, cod_col:Optional[str], desc_col:Optional[str]): 
+   arr = np.array((cod_col, desc_col))
+   boolean = (arr != None)
+   return df[arr[boolean]].drop_duplicates().reset_index(drop=True)
 # ---------------------------------------------------------------------------------------------------------------------------------
 from argendata.qa.verificadores import Verifica
 from pandas import DataFrame
@@ -321,30 +326,42 @@ class GeoControles:
     
     
     def verificacion_geo_columnas_son_correctas(self, dataset:DataFrame, nomenclador:DataFrame, desc_sim_thresh:float, 
-                                            normalizer_f:Callable, translator_f:Optional[Callable])->Optional[dict[int,Tuple[Any]]]:
-        self.total_results = None
+                                            normalizer_f:Callable, translator_f:Optional[Callable])->Optional[dict[int,dict]]:
+        
         self.code_universe = nomenclador['codigo_fundar'].to_list()
         self.desc_universe = nomenclador['desc_fundar'].to_list()
-        
-        if self.col_match:
-            self.total_results = {}
-            for pair, (cod_col, desc_col) in enumerate(self.col_match): 
-                
-                # Garantizo que las listas input_codes e input_desc estén indexadas igual. 
-                analyzed_data = dataset[[cod_col, desc_col]].drop_duplicates().reset_index(drop=True)
-                input_codes = analyzed_data[cod_col].to_list()
-                input_desc = analyzed_data[desc_col].to_list()
 
+        if self.col_match is None:
+            return None
+        
+        
+        self.total_results = {}
+
+        cod_col: Optional[str]
+        desc_col: Optional[str]
+        for pair, (cod_col, desc_col) in enumerate(self.col_match): 
+            
+            # Garantizo que las listas input_codes e input_desc estén indexadas igual. 
+            analyzed_data = data_to_analyze(df=dataset, cod_col=cod_col, desc_col=desc_col)
+            result_codes = None
+            result_desc = None
+            
+            if cod_col:
+                input_codes = analyzed_data[cod_col].to_list()
                 result_codes = columa_codigos_es_correcta(input_codes=input_codes, universe_codes=self.code_universe)
-                
+            
+            if desc_col:
+                input_desc = analyzed_data[desc_col].to_list()
                 result_desc = columna_nombres_es_correcta(input_desc=input_desc, desc_universe=self.desc_universe, 
-                                                          final_thresh=desc_sim_thresh, normalizer_f=normalizer_f, 
-                                                          translator_f=translator_f)
-                paired_result = {}
-                paired_result['cod_col_name'] = cod_col
-                paired_result['cod_col_result'] = result_codes
-                paired_result['desc_col_name'] = desc_col
-                paired_result['desc_col_result'] = result_desc
-                self.total_results[pair] = paired_result
+                                                        final_thresh=desc_sim_thresh, normalizer_f=normalizer_f, 
+                                                        translator_f=translator_f)
+            
+            paired_result = {}
+            paired_result['cod_col_name'] = cod_col
+            paired_result['cod_col_result'] = result_codes
+            paired_result['desc_col_name'] = desc_col
+            paired_result['desc_col_result'] = result_desc
+            self.total_results[pair] = paired_result
         
         return self.total_results    
+
