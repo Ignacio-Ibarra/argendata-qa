@@ -302,6 +302,9 @@ class ControlSubtopico:
         
         geo_verificador = geo_verificador.verificar_todo()
 
+        if geo_verificador['verificacion_existencia_geo_columns'] is not None:
+            geocontroles = geo_verificador.copy()
+        
         partial_result['geocontroles'] = geocontroles
 
         return partial_result
