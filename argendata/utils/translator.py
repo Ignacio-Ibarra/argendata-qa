@@ -1,6 +1,6 @@
 import sys
 import re
-from typing import Literal
+from typing import Literal, List
 from time import sleep
 import numpy.random as random
 import pandas as pd
@@ -69,10 +69,32 @@ def translate(to_translate, to_language="auto", from_language="auto"):
         result = unescape(re_result[0])
     return (result)
 
-def bulk_translate(string_list:list[str], input_lang:Literal['en','es','fr','auto'] = 'auto', output_lang:Literal['en','es','fr','auto'] = 'auto', collapser:str =";")->list[str]:
+def bulk_translate(string_list:List[str], input_lang:Literal['en','es','fr','auto'] = 'auto', 
+                   output_lang:Literal['en','es','fr','auto'] = 'auto', collapser:str =" @ ")->list[str]:
+    
     s = collapser.join(string_list)
     o = translate(s, from_language=input_lang, to_language=output_lang)
     return [x.lstrip().rstrip() for x in o.split(collapser)]
+
+def translate_by_chunk(string_list: List[str], n_chunks: int = 5, 
+                   input_lang: Literal['en', 'es', 'fr', 'auto'] = 'auto', 
+                   output_lang: Literal['en', 'es', 'fr', 'auto'] = 'auto', 
+                   collapser: str = " @ ") -> List[str]:
+    
+    translated_strings = []
+    
+    chunk_size = len(string_list)//n_chunks
+    # Divide la lista de cadenas en chunks
+    for i in range(0, len(string_list), chunk_size):
+        chunk_list = string_list[i:i+chunk_size]
+                
+        # Traduce el chunk actual
+        translated_chunk = bulk_translate(chunk_list, input_lang=input_lang, output_lang=output_lang, collapser=collapser)
+               
+        # Divide el resultado del chunk traducido y lo agrega a la lista de traducciones
+        translated_strings.extend(translated_chunk)
+    
+    return translated_strings
 
 
 def detect_language(list_strings:list[str], lang_detector:LanguageDetector)->str: 
