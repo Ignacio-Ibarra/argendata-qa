@@ -231,24 +231,24 @@ def traer_nombre_similar(input_desc:list[str], desc_universe:list[str], final_th
         List[Tuple[int, str, int|None, str|None]]: Devuelve una lista con el indice de la descripción, 
         la descripción, el indice de la descripción similar o None y la descripción similar o None
     """
-    data = pd.DataFrame()
+    # data = pd.DataFrame()
     input_desc_analyzed = input_desc.copy()
-    data['input_desc'] = input_desc_analyzed
+    # data['input_desc'] = input_desc_analyzed
     desc_universe_analyzed = desc_universe.copy()
 
     if translator_f:
         print("Traduciendo descripciones antes del análisis")
         input_desc_analyzed = translator_f(input_desc_analyzed)
-        data['translated'] = input_desc_analyzed
+        # data['translated'] = input_desc_analyzed
         desc_universe_analyzed = translator_f(desc_universe_analyzed)
 
     if normalizer_f:
         print("Normalizando descripciones antes del análisis")
         input_desc_analyzed = list(map(normalizer_f, input_desc_analyzed))
-        data['normalized'] = input_desc_analyzed
+        # data['normalized'] = input_desc_analyzed
         desc_universe_analyzed = list(map(normalizer_f, desc_universe_analyzed))
     
-    print(data)
+    # print(data)
     selected = []
     
     # Para cada string en input_desc_normalized
