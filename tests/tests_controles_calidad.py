@@ -1,6 +1,11 @@
 import unittest
 from pandas import DataFrame
-from argendata.qa.controles_calidad import controles, tiene_caracteres_raros, check_wrong_colname
+from argendata.qa.controles_calidad import (
+    controles, 
+    tiene_caracteres_raros, 
+    check_wrong_colname,
+    is_tidy
+)
 
 class TestControlesCalidad(unittest.TestCase):
 
@@ -10,19 +15,20 @@ class TestControlesCalidad(unittest.TestCase):
     
     #  def test_duplicates(self): ...
 
+    # ['nullity_check', 'duplicates', 'variables']
+
     def test_check_wrong_colname(self):
         valid_colnames = ['abc', 'anio', 'abc1']
         invalid_colnames = ['1abc', 'año', '1995', 'a bc', '', ' ']
 
         for colname in valid_colnames:
-            self.assertFalse(check_wrong_colname(colname))
+            self.assertFalse(check_wrong_colname(colname), f'Fallo en {colname}')
         
         for colname in invalid_colnames:
             self.assertTrue(check_wrong_colname(colname), f'Falló en {colname}')
 
     
-    # def test_header(self): ...
-
+    def test_header(self): ...
     def test_tiene_caracteres_raros(self):
         valid_words = ['Hello', 'world', 'áéíóú', 'üñôç', 'ÁÉÍÓÚ', 'ÜÑÇ', '123', 'hello_world', '(hello, world)']
         invalid_words = ['Hello@', 'world#', 'áéíóú$', '%üñôç', '&ÁÉÍÓÚ', '*ÜÑÇ', '123^', 'hello_world!', '(hello, world)%']
@@ -58,6 +64,36 @@ class TestControlesCalidad(unittest.TestCase):
         for data, expected in test_cases:
             result = controles['special_characters'](data)
             self.assertEqual(result, expected)
+    
+    def test_tidy_data(self):
+
+        df1 = DataFrame({
+            'col1': ['a', 'b', 'c', 'd'],
+            'val1': [1, 2, 3, 4]
+        })
+
+        df2 = DataFrame({
+            'col1': ['a', 'b', 'c', 'd'],
+            'col2': ['a', 'b', 'c', 'd'],
+            'val1':  [1, 2, 3, 4]
+        })
+
+        cases = [
+            ({
+                'data': df1,
+                'keys': ['col1', 'val1']
+            },
+            True),
+
+            ({
+                'data': df2,
+                'keys': ['col1']
+            },
+            False)
+        ]
+
+        for case, expected in cases:
+            self.assertEqual(is_tidy(**case), expected)
     
     #  def test_variables(self): ...
     #  class TestVerificacionVariables(TestCase):
