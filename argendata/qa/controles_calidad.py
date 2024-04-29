@@ -1,5 +1,6 @@
 from argendata.utils import MethodMapping
 from pandas import DataFrame, isnull, Series
+from typing import Iterable
 from numpy import nan
 from functools import reduce
 import re
@@ -32,10 +33,10 @@ def is_tidy(data: DataFrame, keys: list[str], threshold: float = 0.5):
 
 
 @controles.register('nullity_check')
-def number_of_nulls(data: DataFrame, non_nullable):
+def number_of_nulls(data: DataFrame, non_nullable: Iterable[str]):
     nulls_per_col = {colname : column.isna().sum() for colname, column in data.items()}
-    
-    result = [x for x in non_nullable if nulls_per_col.get(x) > 0]
+
+    result = [x for x in non_nullable if nulls_per_col.get(x, -1) > 0]
     return len(result) == 0, result
 
 # @controles.register('cardinality')
