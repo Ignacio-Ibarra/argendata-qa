@@ -15,7 +15,7 @@ from argendata.utils.fuzzy_matching import colnames_similarityx
 import chardet
 import re
 
-nomenclador = read_excel('./geonomenclador.xlsx')
+nomenclador = read_excel('argendata/qa/geonomencladores/geonomenclador.xlsx')
 
 def encoding_with_chardet(file_path):
     with open(file_path, 'rb') as file:
