@@ -3,7 +3,7 @@ from logging import Logger
 import pandas
 
 from argendata.utils.gwrappers import GFolder, GResource, GDrive
-from argendata.constants import carpeta_subtopico, ARGENDATA_FOLDER_ID
+from argendata.constants import carpeta_subtopico
 from pandas import DataFrame
 from .verificador.abstracto import Verificador
 
@@ -50,7 +50,10 @@ class Subtopico:
 
 
     @classmethod
-    def from_name(cls, name: str, entrega: int, root: str = ARGENDATA_FOLDER_ID):
+    def from_name(cls, name: str, entrega: int, root: str = None):
+        if not root:
+            from argendata.constants import ARGENDATA_FOLDER_ID
+            
         result = cls(GResource.from_id(root).find_by_recursion(f'SUBTOPICOS/{name}'), entrega)
         result.log.debug('Initialized correctly from name.')
         return result
