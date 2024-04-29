@@ -12,8 +12,6 @@ from argendata.qa.controles_calidad import (
 
 class TestControlesCalidad(unittest.TestCase):
 
-    #  def test_duplicates(self): ...
-
     def test_check_wrong_colname(self):
         valid_colnames = ['abc', 'anio', 'abc1']
         invalid_colnames = ['1abc', 'año', '1995', 'a bc', '', ' ']
