@@ -52,8 +52,9 @@ class Subtopico:
     @classmethod
     def from_name(cls, name: str, entrega: int, root: str = None):
         if not root:
-            from argendata.constants import ARGENDATA_FOLDER_ID
-            
+            from argendata.constants import get_argendata_folder_id
+            root = get_argendata_folder_id()
+
         result = cls(GResource.from_id(root).find_by_recursion(f'SUBTOPICOS/{name}'), entrega)
         result.log.debug('Initialized correctly from name.')
         return result
