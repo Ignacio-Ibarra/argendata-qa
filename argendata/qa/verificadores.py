@@ -353,7 +353,7 @@ class ControlSubtopico:
 
                 result[x.title] = partial_result
             except Exception as e:
-                raise
+                # raise
                 errors.append((x.title, str(e)))
         
         if len(errors) > 0:
