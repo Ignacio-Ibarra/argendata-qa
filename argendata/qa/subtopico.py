@@ -39,7 +39,7 @@ class Subtopico:
         #   Está hardcodeado sólo para poder testearlo.
         # self.dataset: GFolder = next(filter(lambda x: 'segunda' in x.title, self.detectar_entregas()))
         # self.log.debug(f'Found dataset with version {self.dataset.title}')
-        entregas_alias = ['primera', 'segunda']
+        entregas_alias = ['primera', 'segunda', 'update']
         e_i = entrega-1
         entrega = entregas_alias[e_i]
 
