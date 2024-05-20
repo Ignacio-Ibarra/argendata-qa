@@ -6,11 +6,21 @@ import shutil
 import re
 import os
 
-def gsheet_download_csv(id: str, 
-                        target: str, 
-                        url_template="https://docs.google.com/spreadsheets/d/{id}/export?format=csv"):
-    url = url_template.format(id=id)
+def gsheet_download(id: str, 
+                    target: str,
+                    format: str, 
+                    url_template="https://docs.google.com/spreadsheets/d/{id}/export?format={format}"):
+    url = url_template.format(id=id, format=format)
     return urllib.request.urlretrieve(url, target)
+
+
+def gsheet_download_csv(id: str, 
+                        target: str):
+    return gsheet_download(id=id, target=target, format="csv")
+
+def gsheet_download_xlsx(id: str, 
+                        target: str):
+    return gsheet_download(id=id, target=target, format="xlsx")
 
 def match_relocate(src, target, pattern, file_list=None):
     files_to_move = file_list or os.listdir(src)
