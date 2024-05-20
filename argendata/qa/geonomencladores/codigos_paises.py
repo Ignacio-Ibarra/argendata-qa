@@ -43,6 +43,7 @@ column_keys = [
     'partner_region_name_short_es',
     'pais_o_region',
     'pais_o_grupo_de_paises',
+    'grupo_de_paises',
     'countryname',
     'region_name',
     'pais_nombre',
