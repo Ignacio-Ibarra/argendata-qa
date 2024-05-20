@@ -9,12 +9,8 @@ from argendata.utils.files.charsets import get_codecs
 from .subtopico import Subtopico
 from .verificador.abstracto import Verifica
 from .controles_calidad import make_controls
-<<<<<<< HEAD
-from .geonomencladores.codigos_paises import GeoControles, str_normalizer_f, auto_translator_f
-=======
 from argendata.qa.geonomencladores.codigos_paises import str_normalizer_f, auto_translator_f
 from argendata.qa.geonomencladores.codigos_paises import GeoControles
->>>>>>> fd0279e2eb934e4741724eb119bd3f64c8646da7
 from argendata.utils.fuzzy_matching import colnames_similarityx
 import chardet
 import re
