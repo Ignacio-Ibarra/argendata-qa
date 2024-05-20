@@ -9,10 +9,17 @@ from argendata.utils.files.charsets import get_codecs
 from .subtopico import Subtopico
 from .verificador.abstracto import Verifica
 from .controles_calidad import make_controls
+<<<<<<< HEAD
 from .geonomencladores.codigos_paises import GeoControles, str_normalizer_f, auto_translator_f
+=======
+from argendata.qa.geonomencladores.codigos_paises import str_normalizer_f, auto_translator_f
+from argendata.qa.geonomencladores.codigos_paises import GeoControles
+>>>>>>> fd0279e2eb934e4741724eb119bd3f64c8646da7
 from argendata.utils.fuzzy_matching import colnames_similarityx
 import chardet
 import re
+
+nomenclador = read_excel('argendata/qa/geonomencladores/geonomenclador.xlsx')
 
 def encoding_with_chardet(file_path):
     with open(file_path, 'rb') as file:
@@ -285,17 +292,25 @@ class ControlSubtopico:
         
         partial_result['quality_checks'] = quality_analysis
 
-        # TODO: Agregar GeoControles y devolver resultado en un diccionario y agregar ese subdiccionario a una key de partial_results o devolver None si no tiene geoinfo. 
-        
-        nomenclador = read_excel(r'C:\Users\Joan\Coding\Python\datos-Fundar\backend\argendata\qa\geonomencladores\geonomenclador.xlsx')
+        geocontroles = None
 
-        geocontroles = GeoControles(name=dataset.title, dataset=df, nomenclador=nomenclador, 
-                                                      colnames_string_matcher=colnames_similarityx, 
-                                                      col_sim_thresh=0.9, 
-                                                      desc_sim_thresh=0.5, 
-                                                      k=5, 
-                                                      normalizer_f=str_normalizer_f, 
-                                                      translator_f=auto_translator_f).verificar_todo()
+        geo_verificador = GeoControles(name=dataset.title, 
+                                       dataset=df, 
+                                       nomenclador=nomenclador, 
+                                       colnames_string_matcher=colnames_similarityx, 
+                                       col_sim_thresh=0.9, 
+                                       desc_sim_thresh=0.5, 
+                                       k=5, 
+                                       normalizer_f=str_normalizer_f, 
+                                       translator_f=auto_translator_f)
+        
+        geo_verificador = geo_verificador.verificar_todo()
+
+        if geo_verificador['verificacion_existencia_geo_columns'] is not None:
+            geocontroles = geo_verificador.copy()
+        
+        partial_result['geocontroles'] = geocontroles
+
         return partial_result
     
     def error_handler(self, e: Exception, x):
@@ -342,6 +357,7 @@ class ControlSubtopico:
 
                 result[x.title] = partial_result
             except Exception as e:
+                # raise
                 errors.append((x.title, str(e)))
         
         if len(errors) > 0:

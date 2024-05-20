@@ -18,7 +18,7 @@ def remove_punctuation(s:str, remove_string:str ='!"#$%&\'()*+,-./:;<=>?@[\\]^_`
     translation = str.maketrans(remove_string, ' ' * len(remove_string))
     return s.translate(translation)
 
-def remove_special_words(s:str, special_words:list=['republica','de', 'del'])->str:
+def remove_special_words(s:str, special_words:list=['republica','de', 'del','republic'])->str:
     s = ' '.join(filter(lambda x: x not in special_words,  s.split(" ")))
     return s
 

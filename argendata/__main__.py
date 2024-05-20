@@ -15,6 +15,17 @@ from argendata.reporter.pdfexport import pandoc_export
 from argendata.freeze import generate_ids, autoajustar_columnas
 from argendata.freeze import exportar_definitivo
 import csv
+import numpy as np
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 def wrap_string(string: str, max_length: int) -> str:
     if len(string) <= max_length:
@@ -40,7 +51,7 @@ def main(subtopico: str, entrega: int, generate_indices: bool, es_definitivo: bo
     outfile_path = f'./output/{subtopico+str(entrega)}/result-'+outfile+'.json'
 
     with open(file(outfile_path), 'w') as fp:
-        json.dump(obj=verificaciones, indent=4, fp=fp)
+        json.dump(obj=verificaciones, indent=4, fp=fp, cls=NpEncoder)
 
     log.info(f'Reporte para {subtopico+str(entrega)} generado en {outfile_path}')
 

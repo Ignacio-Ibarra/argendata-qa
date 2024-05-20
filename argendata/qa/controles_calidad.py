@@ -1,5 +1,6 @@
 from argendata.utils import MethodMapping
 from pandas import DataFrame, isnull, Series
+from typing import Iterable
 from numpy import nan
 from functools import reduce
 import re
@@ -32,10 +33,10 @@ def is_tidy(data: DataFrame, keys: list[str], threshold: float = 0.5):
 
 
 @controles.register('nullity_check')
-def number_of_nulls(data: DataFrame, non_nullable):
+def number_of_nulls(data: DataFrame, non_nullable: Iterable[str]):
     nulls_per_col = {colname : column.isna().sum() for colname, column in data.items()}
-    
-    result = [x for x in non_nullable if nulls_per_col.get(x) > 0]
+
+    result = [x for x in non_nullable if nulls_per_col.get(x, -1) > 0]
     return len(result) == 0, result
 
 # @controles.register('cardinality')
@@ -62,11 +63,14 @@ def check_duplicates(data: DataFrame, keys: list[str])->bool:
     """
     return bool(data.duplicated(subset=keys).sum() > 0)
 
-PATRON_WRONG_COLNAME = re.compile(r'[^a-z0-9_]+')
+PATRON_WRONG_COLNAME = re.compile(r'[^a-z0-9_]|(^[^a-z])')
 def check_wrong_colname(cadena): 
     """Devuelve True si la cadena es inválida, y False si no."""
     # Definir una expresión regular que acepte solo letras y números
     # Buscar si hay coincidencias en la cadena
+    if len(cadena) == 0 or len(cadena.replace(' ', '')) == 0:
+        return True
+    
     coincidencias = PATRON_WRONG_COLNAME.findall(cadena)
     # Devolver True si hay coincidencias, lo que significa que hay caracteres raros
     return len(coincidencias) != 0

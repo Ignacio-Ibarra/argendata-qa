@@ -19,9 +19,9 @@ empty_list = List[void]
 normalize_parms : dict = {'to_lower':True, 
                           'rm_accents':True,
                           'rm_punct':True, 
-                          'rm_spw':False, 
+                          'rm_spw':True, 
                           'rm_whitesp':True, 
-                          'sort_words':False}
+                          'sort_words':True}
 
 str_normalizer_f = str_normalizer(normalize_params=normalize_parms)
 
@@ -65,24 +65,48 @@ code_keys = [
 
 # Función para encontrar columnas geo por fuzzy matching
 def get_geo_columns_by_colnames(cols: Collection[str], similarity_func:Callable, threshold:float, k:int) -> Optional[Tuple[List[Tuple[str,float]]]]:
-    result = None
-    codes   = list(map(get_k_similar_from(code_keys, k=k, with_scores=True, threshold=threshold, similarity_func=similarity_func), cols))
-    strings = list(map(get_k_similar_from(column_keys, k=k, with_scores=True, threshold=threshold, similarity_func=similarity_func), cols))
-      
-    
-    if any(len(x)>0 for x in codes):
-        result_codes = [x for x in list(codes) if x!=[]][0]
-        result = (result_codes,)
-    if any(len(x)>0 for x in strings): 
-        result_strings =  [x for x in list(strings) if x!=[]][0]
-        result = result + (result_strings,)
+    codes   = map(get_k_similar_from(code_keys, similarity_func=similarity_func, k=k, with_scores=True, threshold=threshold), cols)
+    strings = map(get_k_similar_from(column_keys, similarity_func=similarity_func, k=k, with_scores=True, threshold=threshold), cols)
 
-    return result
+    code_scores = [sum([x for _,x in y]) for y in codes]
+    string_scores = [sum([x for _,x in y]) for y in strings]
+
+    codes_result = []
+    names_result = []
+
+    result_ = {
+        'codes': codes_result,
+        'names': names_result
+    }
+
+    for x, (a,b) in zip(cols, zip(code_scores, string_scores)):
+        if a+b == 0:
+            continue
+        
+        if a > b:
+            seq = codes_result
+            score = a
+        else:
+            seq = names_result
+            score = b
+        
+        seq.append((x, score))
+        
+    result = tuple(result_.values())
+    
+    return result 
+
+
+def es_string_iso(value:Any)->bool: 
+    is_string = isinstance(value, str)
+    is_len3 = len(str(value)) == 3
+    is_upper = str(value).isupper()
+    return (is_string and is_len3 and is_upper)
 
 
 # Función para definir si una columna tiene codigos. 
 def es_columna_codigo(series:pd.Series)->bool: 
-    return series.apply(lambda x: len(str(x)) == 3).sum()> 0.90*len(series) 
+    return series.apply(lambda x: es_string_iso(x)).sum()> 0.90*len(series) 
 
 # Función para obtener la columna que tiene códigos. 
 def get_columna_codigo_iso(df:pd.DataFrame)->str:
@@ -207,19 +231,24 @@ def traer_nombre_similar(input_desc:list[str], desc_universe:list[str], final_th
         List[Tuple[int, str, int|None, str|None]]: Devuelve una lista con el indice de la descripción, 
         la descripción, el indice de la descripción similar o None y la descripción similar o None
     """
+    # data = pd.DataFrame()
     input_desc_analyzed = input_desc.copy()
+    # data['input_desc'] = input_desc_analyzed
     desc_universe_analyzed = desc_universe.copy()
 
     if translator_f:
         print("Traduciendo descripciones antes del análisis")
         input_desc_analyzed = translator_f(input_desc_analyzed)
+        # data['translated'] = input_desc_analyzed
         desc_universe_analyzed = translator_f(desc_universe_analyzed)
 
     if normalizer_f:
         print("Normalizando descripciones antes del análisis")
         input_desc_analyzed = list(map(normalizer_f, input_desc_analyzed))
+        # data['normalized'] = input_desc_analyzed
         desc_universe_analyzed = list(map(normalizer_f, desc_universe_analyzed))
     
+    # print(data)
     selected = []
     
     # Para cada string en input_desc_normalized
@@ -266,6 +295,10 @@ def columna_nombres_es_correcta(input_desc:list[str], desc_universe:list[str], f
         return False, no_encontrados, result
 
 
+def data_to_analyze(df:pd.DataFrame, cod_col:Optional[str], desc_col:Optional[str]): 
+   arr = np.array((cod_col, desc_col))
+   boolean = (arr != None)
+   return df[arr[boolean]].drop_duplicates().reset_index(drop=True)
 # ---------------------------------------------------------------------------------------------------------------------------------
 from argendata.qa.verificadores import Verifica
 from pandas import DataFrame
@@ -305,30 +338,42 @@ class GeoControles:
     
     
     def verificacion_geo_columnas_son_correctas(self, dataset:DataFrame, nomenclador:DataFrame, desc_sim_thresh:float, 
-                                            normalizer_f:Callable, translator_f:Optional[Callable])->Optional[dict[int,Tuple[Any]]]:
-        self.total_results = None
+                                            normalizer_f:Callable, translator_f:Optional[Callable])->Optional[dict[int,dict]]:
+        
         self.code_universe = nomenclador['codigo_fundar'].to_list()
         self.desc_universe = nomenclador['desc_fundar'].to_list()
-        
-        if self.col_match:
-            self.total_results = {}
-            for pair, (cod_col, desc_col) in enumerate(self.col_match): 
-                
-                # Garantizo que las listas input_codes e input_desc estén indexadas igual. 
-                analyzed_data = dataset[[cod_col, desc_col]].drop_duplicates().reset_index(drop=True)
-                input_codes = analyzed_data[cod_col].to_list()
-                input_desc = analyzed_data[desc_col].to_list()
 
+        if self.col_match is None:
+            return None
+        
+        
+        self.total_results = {}
+
+        cod_col: Optional[str]
+        desc_col: Optional[str]
+        for pair, (cod_col, desc_col) in enumerate(self.col_match): 
+            
+            # Garantizo que las listas input_codes e input_desc estén indexadas igual. 
+            analyzed_data = data_to_analyze(df=dataset, cod_col=cod_col, desc_col=desc_col)
+            result_codes = None
+            result_desc = None
+            
+            if cod_col:
+                input_codes = analyzed_data[cod_col].to_list()
                 result_codes = columa_codigos_es_correcta(input_codes=input_codes, universe_codes=self.code_universe)
-                
+            
+            if desc_col:
+                input_desc = analyzed_data[desc_col].to_list()
                 result_desc = columna_nombres_es_correcta(input_desc=input_desc, desc_universe=self.desc_universe, 
-                                                          final_thresh=desc_sim_thresh, normalizer_f=normalizer_f, 
-                                                          translator_f=translator_f)
-                paired_result = {}
-                paired_result['cod_col_name'] = cod_col
-                paired_result['cod_col_result'] = result_codes
-                paired_result['desc_col_name'] = desc_col
-                paired_result['desc_col_result'] = result_desc
-                self.total_results[pair] = paired_result
+                                                        final_thresh=desc_sim_thresh, normalizer_f=normalizer_f, 
+                                                        translator_f=translator_f)
+            
+            paired_result = {}
+            paired_result['cod_col_name'] = cod_col
+            paired_result['cod_col_result'] = result_codes
+            paired_result['desc_col_name'] = desc_col
+            paired_result['desc_col_result'] = result_desc
+            self.total_results[pair] = paired_result
         
         return self.total_results    
+

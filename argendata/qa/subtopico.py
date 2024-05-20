@@ -3,7 +3,7 @@ from logging import Logger
 import pandas
 
 from argendata.utils.gwrappers import GFolder, GResource, GDrive
-from argendata.constants import carpeta_subtopico, ARGENDATA_FOLDER_ID
+from argendata.constants import carpeta_subtopico
 from pandas import DataFrame
 from .verificador.abstracto import Verificador
 
@@ -39,7 +39,7 @@ class Subtopico:
         #   Está hardcodeado sólo para poder testearlo.
         # self.dataset: GFolder = next(filter(lambda x: 'segunda' in x.title, self.detectar_entregas()))
         # self.log.debug(f'Found dataset with version {self.dataset.title}')
-        entregas_alias = ['primera', 'segunda']
+        entregas_alias = ['primera', 'segunda', 'update']
         e_i = entrega-1
         entrega = entregas_alias[e_i]
 
@@ -50,7 +50,11 @@ class Subtopico:
 
 
     @classmethod
-    def from_name(cls, name: str, entrega: int, root: str = ARGENDATA_FOLDER_ID):
+    def from_name(cls, name: str, entrega: int, root: str = None):
+        if not root:
+            from argendata.constants import get_argendata_folder_id
+            root = get_argendata_folder_id()
+
         result = cls(GResource.from_id(root).find_by_recursion(f'SUBTOPICOS/{name}'), entrega)
         result.log.debug('Initialized correctly from name.')
         return result
