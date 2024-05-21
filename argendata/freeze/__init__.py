@@ -27,7 +27,7 @@ def exportar_definitivo(subtopico_obj, nombre_subtopico: str, entrega: int, veri
     for file in subtopico_obj.dataset.resources:
         # check file class
         if not isinstance(file, GFile):
-            logger.error(f"Skipping {file.name} as it is not a file")
+            logger.debug(f"Skipping {file.clean_title} as it is not a file")
             continue
         name = file.clean_title+file.extension
         name = name.strip()
