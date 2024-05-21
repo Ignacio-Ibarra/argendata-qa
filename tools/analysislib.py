@@ -6,6 +6,67 @@ import shutil
 import re
 import os
 
+import json 
+from glob import glob
+from typing import Optional, Any
+
+def cargar_verificaciones(alias: str)->dict[Any]:
+
+    path = f'../output/{alias}/'
+
+    results = glob(path+'*.json')
+    results = sorted(results, key=lambda x:x, reverse=True)
+    
+    file_path = results[0]
+
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+
+    # get verificacion_datasets de data
+    verificacion_datasets = data['verificacion_datasets'][0]
+    return verificacion_datasets
+
+def verificaciones_de(dataset: str, verificaciones: dict[str, any]) -> Optional[dict]:
+    geocontroles = verificaciones[dataset]['geocontroles']
+    
+    if not geocontroles:
+        print('No tiene geocontroles')
+        return None
+    
+    return geocontroles
+
+# Versión currificada
+def verificaciones_datasetx(verificaciones:dict[Any]):
+    return lambda dataset_name: verificaciones_de(dataset=dataset_name, verificaciones=verificaciones)
+
+
+def get_geoerrores(geocontroles: dict) -> list:
+    result = {}
+
+
+
+    for k,v in geocontroles['verificacion_geo_columnas_son_correctas'].items():
+        no_tiene_errores, errores, _ = v['cod_col_result']
+
+        if no_tiene_errores:
+            continue
+
+        result.setdefault(k, list(map(tuple, errores)))
+
+    return result
+
+
+def compare_ids(a):
+    def _(b):
+        try:
+            a_before, a_after = a.split('_g')
+            b_before, b_after = b.split('_g')
+            return a_before == b_before and int(a_after) == int(b_after)
+        except Exception:
+            return False
+    return _
+
+
 def gsheet_download(id: str, 
                     target: str,
                     format: str, 
