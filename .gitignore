@@ -6,6 +6,8 @@ test/utils/files/charsets/testfiles_encoding/*
 .idea/*
 output/*
 tools/*
+tools/analysis.ipynb
+tools/analysis.old.ipynb
 .env
 *.csv
 *.json
