@@ -1,6 +1,8 @@
 <div align="center">
- <img src="assets/argendata-logo.png" alt=""></img>
+ <img src="assets/argendata-logo.png" alt="" width="450"></img>
 </div>
+
+&nbsp;
 
 <div align='center'>
  <img src="./assets/agd-0124.gif" alt=""></img>
