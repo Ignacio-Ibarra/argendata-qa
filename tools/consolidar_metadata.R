@@ -34,19 +34,21 @@ metadata_files <- files_subtopicos %>%
 # Autentica el acceso a Google Sheets usando la misma dirección de correo electrónico
 gs4_auth(email = Sys.getenv("USER_GMAIL"))
 
+leer_metadata <- function(id, name){
+  read_sheet(id, skip = 6, col_types = "c") %>% mutate(subtop_id = str_replace(tolower(name), "argendata -", ""))
+}
+
 # Para cada archivo de metadatos, lee su contenido saltando las primeras 6 filas y asumiendo que las columnas son tipo texto
-metadata <- map(metadata_files$id, \(x) {
-  read_sheet(x, skip = 6, col_types = "c")
-})
+metadata <- map2(metadata_files$id, metadata_files$name, \(x,y) {leer_metadata(id = x, name = y)})
 
 # Combina los datos leídos de todos los archivos de metadatos en un único dataframe
-metadata <- bind_rows(metadata)
+metadata_concat <- bind_rows(metadata) %>% select(-area,-topico_desc,-subtopico_desc)
 
 # Filtra el dataframe resultante para eliminar las filas donde todos los valores son NA (datos faltantes)
-metadata <- metadata %>% 
+metadata_concat <- metadata_concat %>% 
   filter(!if_all(everything(), is.na))
 
 # Escribe el dataframe final a un archivo CSV llamado "metadata.csv"
-metadata %>% 
-  write_csv("metadata.csv")
+metadata_concat %>% 
+  write_csv("./tools/metadata.csv")
 
