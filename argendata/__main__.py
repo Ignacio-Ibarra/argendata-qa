@@ -95,5 +95,8 @@ def main(subtopico: str, entrega: int, generate_indices: bool, es_definitivo: bo
         exportar_definitivo(subtopico_obj, subtopico, entrega, verificaciones['verificacion_datasets'][0], csv_map, ids)
 
 
+def update(subtopico: str, entrega: int, generate_indices: bool, es_definitivo: bool):
+    ...
+
 if __name__ == "__main__":
     main()

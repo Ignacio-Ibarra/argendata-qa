@@ -30,6 +30,7 @@ class Parser(argparse.ArgumentParser):
         self.add_argument('-C', '--clean-first', action='store_true', help='Borra los archivos de la entrega antes de analizarla')
         self.add_argument('-i', '--index', action='store_true', help='Crea la tabla de índices')
         self.add_argument('-d', '--exportar-definitivo', action='store_true', help='Genera tabla de índices y renombra los archivos.')
+        self.add_argument('-u', '--update', action='store_true')
 
         # Argumento de debug para poder testear los argumentos.
         # Si está, no se ejecuta el programa.
@@ -55,6 +56,7 @@ if __name__ == '__main__':
     alias = args.get('alias', None)
     generate_indices = args.get('index', False)
     exportar_definitivo = args.get('exportar_definitivo', False)
+    update = args.get('update', False)
 
     if (not subtopico and not alias) or (entrega and alias) or (subtopico and not entrega):
         print('Se debe especificar un subtopico y una entrega, o un alias')
@@ -79,4 +81,7 @@ if __name__ == '__main__':
         remove_folder_recursive(f'./output/')
         remove_folder_recursive(f'./tmp/')
 
-    argendata.main(subtopico, entrega, generate_indices, exportar_definitivo)
+    if update:
+        print(subtopico, entrega)
+    else:
+        argendata.main(subtopico, entrega, generate_indices, exportar_definitivo)
