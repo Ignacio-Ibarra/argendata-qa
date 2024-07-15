@@ -11,7 +11,7 @@
 </div>
 -->
 
-**QA**_ tiene como objetivo principal dar estructura al proyecto **Argendata** para simplificar los procesos de creación y ejecución de controles sobre los _datasets_, haciendo que el código escale más y mejor.
+**_QA_** tiene como objetivo principal dar estructura al proyecto **Argendata** para simplificar los procesos de creación y ejecución de controles sobre los _datasets_, haciendo que el código escale más y mejor.
 
 # Uso
 
