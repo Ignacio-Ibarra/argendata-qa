@@ -92,11 +92,3 @@ Subtopico
 ```
 
 El _entry point_ del programa de QA es 'main.py'. Ejecuta primero los tests unitarios y después el código.
-
-# Google Drive
-
-[(Ver gwrappers/)](./argendata/utils/gwrappers/)
-
-Como los datos se bajan desde _Google Drive_, usamos `pydrive` para interactuar con la correspondiente `API`. El programa espera que en `/.auth/` haya un archivo `client_secrets.json` para autenticar la sesión. Una vez autenticada, los datos de la sesión se guardan en `client_creds.json` en la misma carpeta.
-
-Para simplificar las interacciones que provee `pydrive`, [gwrappers](./argendata/utils/gwrappers/) provee clases para manipular los recursos de _Google Drive_ como objetos.
