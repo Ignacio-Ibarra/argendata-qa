@@ -1,12 +1,15 @@
-<div align="center">
- <img src="assets/argendata-logo.png" alt="" width="450"></img>
+<div align="left">
+ <img src="https://github.com/user-attachments/assets/56e7dede-1614-48c7-91e1-302194cc519d" alt="" width="300"></img>
 </div>
 
 &nbsp;
 
+
+<!--
 <div align='center'>
  <img src="./assets/agd-0124.gif" alt=""></img>
 </div>
+-->
 
 La idea de esta repo es continuar con el desarrollo de ArgenData (por ahora, la parte de QA) de manera más ordenada. En síntesis, tiene como objetivo principal dar estructura al proyecto para simplificar los procesos de creación y ejecución de controles sobre los datasets, haciendo que el código escale más y mejor.
 
