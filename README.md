@@ -17,7 +17,18 @@
 </div>
 -->
 
-**_QA_** tiene como objetivo principal dar estructura al proyecto **Argendata** para simplificar los procesos de creación y ejecución de controles sobre los _datasets_, haciendo que el código escale más y mejor.
+Esta etapa del proyecto tiene como objetivo validar la calidad de los datos de los analistas. Este repositorio contiene el código utilizado para relizar dicha verificación.
+Los datos usados están compuestos por un CSV _crudo_ junto con una plantilla de metadatos, donde se especificaron distintos aspectos de cada dataset (Como por ejemplo,
+qué columnas pueden tener nulos y cuales no). Luego, este programa corrobora que los datos cumplan con la especificación de metadatos.
+
+Cada verificación genera un JSON que contiene toda la información técnica para luego mostrar un reporte en PDF utilizando [`pandoc`](https://pandoc.org/) 
+en el cual se vuelcan todos los problemas encontrados.
+
+Cuando los datos están correctos, se los puede "exportar como definitivos", eso genera y aplica etiquetas a cada dataset (Cambiando el nombre a un formato estándar: `TOPICO_gXX.csv`),
+junto con el mapeo que se realizó (en formato JSON).
+
+El funcionamiento de este código depende fuertemente de la organización de los archivos del proyecto: Se comunica con Google Drive para descargar los archivos, por lo que ejecutar este código sin el acceso
+necesario resultará en un error.
 
 # Uso
 
