@@ -90,9 +90,7 @@ python run.py -a SUBTOP1 -d
 python run.py -a SUBTOP1 --exportar-definitivo
 ```
 
-# QA
-
-La sección de _**QA (Quality Assurance)**_ debe ejecutar una seria de controles para todos sus _datasets_. Los controles están estructurados de manera jerárquica, de forma tal que existen algunos de nivel superior que llaman a otros de nivel inferior.
+Los controles están estructurados de manera jerárquica, de forma tal que existen algunos de nivel superior que llaman a otros de nivel inferior.
 
 Por ejemplo, los `Controles` de `Subtopicos`, llaman a `Controles` de `Archivo` para analizar `.csv`s (_Encoding_, _delimiter_), y `Controles` de `Consistencia` (Diferencias entre lo declarado en la plantilla y lo efectivo en un _dataset_).
 Etc.
