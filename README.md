@@ -1,5 +1,11 @@
 <div align="left">
- <img src="https://github.com/user-attachments/assets/56e7dede-1614-48c7-91e1-302194cc519d" alt="" width="300"></img>
+<a href="https://fund.ar">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/56e7dede-1614-48c7-91e1-302194cc519d">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/4d21912a-0bdd-4dc0-9b66-caa8082ef91b">
+    <img src="fund.ar" width="200"></img>
+  </picture>
+</a>
 </div>
 
 &nbsp;
