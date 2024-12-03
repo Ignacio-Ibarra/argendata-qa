@@ -432,14 +432,14 @@ class Reporter:
 
         # Inspeccion Fuentes
 
-        fuentes, instituciones = list(zip(*self.report['verificacion_fuentes']))
-        fuentes_df = pd.DataFrame({'Fuente': fuentes, 'Institución': instituciones})
-        fuentes_df = make_table(df=fuentes_df, bold_cols=True)
+        #fuentes, instituciones = list(zip(*self.report['verificacion_fuentes']))
+        #fuentes_df = pd.DataFrame({'Fuente': fuentes, 'Institución': instituciones})
+        #fuentes_df = make_table(df=fuentes_df, bold_cols=True)
 
-        inspeccion_fuentes = {'data': fuentes_df}
-        inspeccion_fuentes = templates.InspeccionFuentes.from_dict(inspeccion_fuentes)
-        template_queue.append(inspeccion_fuentes)
-        outfiles.append('inspeccion_fuentes.md')
+        #inspeccion_fuentes = {'data': fuentes_df}
+        #inspeccion_fuentes = templates.InspeccionFuentes.from_dict(inspeccion_fuentes)
+        #template_queue.append(inspeccion_fuentes)
+        #outfiles.append('inspeccion_fuentes.md')
 
         # Metadatos Incompletos
 

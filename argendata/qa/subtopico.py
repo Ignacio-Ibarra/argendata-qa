@@ -32,7 +32,7 @@ class Subtopico:
 
         plantilla = self.carpeta.find_by_name(carpeta_subtopico(self.carpeta.title))
         plantilla_file = GDrive.download_xlsx(plantilla.id)
-        self.plantilla = pandas.read_excel(plantilla_file, sheet_name='COMPLETAR', header=6)
+        self.plantilla = pandas.read_excel(plantilla_file, sheet_name='COMPLETAR', header=0)
         self.log.debug(f'Found, downloaded and parsed metadata for {plantilla.title}')
 
         # FIXME: Cambiar ésto para agarrar la última entrega, o bien decidir en función de la cantidad de archivos.
@@ -44,9 +44,21 @@ class Subtopico:
         entrega = entregas_alias[e_i]
 
         entregas = self.detectar_entregas()
-        self.dataset: GFolder = next(filter(lambda x: entrega in x.title, self.detectar_entregas()))
-        self.log.debug(f'Found dataset with version {self.dataset.title}')
+        self.dataset: GFolder = next(filter(lambda x: entrega in x.title, self.detectar_entregas()), None)
 
+        if self.dataset is None:
+            self.log.error(f'No se encontró la entrega {entrega} en {self.title}')
+        else:
+            self.log.debug(f'Found dataset with version {self.dataset.title}')
+            return
+
+        # if folder 'outputs' has files ending in '.csv'
+        are_csvs_in_folder = any(map(lambda x: x.title.endswith('.csv'), self.carpeta.find_by_recursion('datasets/outputs').resources))
+        if not are_csvs_in_folder:
+            self.log.error(f'No se encontraron archivos .csv en la entrega {entrega} en {self.title}')
+            raise FileNotFoundError(f'No se encontraron archivos .csv en la entrega {entrega} en {self.title}')
+        
+        self.dataset = self.carpeta.find_by_recursion('datasets/outputs')
 
 
     @classmethod

@@ -97,6 +97,7 @@ class ControlSubtopico:
 
     def __init__(self, s: Subtopico):
         plantilla = s.plantilla
+        print(plantilla.columns)
 
         _tipo_dato = plantilla.loc[:, 'tipo_dato']
         _tipo_dato = _tipo_dato.fillna("no completo").str.lower().apply(strip_accents)
@@ -110,25 +111,32 @@ class ControlSubtopico:
 
     @staticmethod
     def verificar_nivel_registro(plantilla,
-                                 columnas=['orden_grafico', 'dataset_archivo', 'script_archivo',
-                                           'variable_nombre', 'url_path', 'fuente_nombre', 'institucion']):
+                                 columnas=['id_grafico', 
+                                           'dataset_archivo', 
+                                           'script_archivo',
+                                           'variable_nombre', 
+                                           #'url_path', 
+                                           #'fuente_nombre', 
+                                           #'institucion'
+                                          ]
+                                ):
         """Verifica que no haya registros duplicados en la plantilla. Los registros son
         observablemente iguales si tienen los mismos valores en todas las columnas especificadas."""
 
         result = 'OK'
-        n_graficos = len(set(plantilla['orden_grafico']))
+        n_graficos = len(set(plantilla['id_grafico']))
 
         nivel_registro = plantilla.groupby(columnas).size()
-        errores = np.unique(nivel_registro[nivel_registro > 1].index.get_level_values('orden_grafico').tolist())
+        errores = np.unique(nivel_registro[nivel_registro > 1].index.get_level_values('id_grafico').tolist())
         # if len(errores) > 0:
         #     result = ", ".join(map(str, errores))
 
         # return result
         return n_graficos, list(map(int, errores))
 
-    @staticmethod
-    def inspeccion_fuentes(plantilla, columnas=['fuente_nombre', 'institucion']):
-        return plantilla[columnas].dropna().drop_duplicates()
+    # @staticmethod
+    # def inspeccion_fuentes(plantilla, columnas=['fuente_nombre', 'institucion']):
+    #     return plantilla[columnas].dropna().drop_duplicates()
 
     @staticmethod
     def verificar_completitud(plantilla: DataFrame,
@@ -149,8 +157,8 @@ class ControlSubtopico:
     def verificacion_nivel_registro(self, a_verificar: Subtopico):
         return ControlSubtopico.verificar_nivel_registro(a_verificar.plantilla)
 
-    def verificacion_fuentes(self, a_verificar: Subtopico):
-        return ControlSubtopico.inspeccion_fuentes(a_verificar.plantilla).to_records(index=False).tolist()
+    # def verificacion_fuentes(self, a_verificar: Subtopico):
+    #     return ControlSubtopico.inspeccion_fuentes(a_verificar.plantilla).to_records(index=False).tolist()
 
     def verificacion_sistema_de_archivos(self, a_verificar: Subtopico):
         plantilla = a_verificar.plantilla
